@@ -107,11 +107,11 @@ class ScreenObjects:
     ServerError=ScreenObject(
         ref=["SERVER_ISSUES"]
     )
-    SaveAndExit=ScreenObject(
-        ref=["SAVE_AND_EXIT_NO_HIGHLIGHT", "SAVE_AND_EXIT_HIGHLIGHT"],
-        roi="save_and_exit",
-        threshold=0.85,
-        use_grayscale=True
+    GameMenu=ScreenObject(
+        ref=["GAME_MENU_HIGHLIGHT"],
+        roi="game_menu_left",
+        best_match=True,
+        threshold=0.95,
     )
     NeedRepair=ScreenObject(
         ref="REPAIR_NEEDED",
