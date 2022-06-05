@@ -170,6 +170,8 @@ class PickIt:
                     # save closeset item for next time to check potential endless loops of not reaching it or of telekinsis/teleport
                     self._last_closest_item = closest_item
 
+        # Make sure not to highlight any items
+        mouse.move(*convert_screen_to_monitor((640, 660)))
         keyboard.send(Config().char["show_items"])
         return found_items
 

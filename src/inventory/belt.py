@@ -12,6 +12,8 @@ from screen import convert_abs_to_monitor, convert_monitor_to_screen, convert_sc
 import keyboard
 import os
 
+tp_column = -1
+
 def open(img: np.ndarray = None) -> np.ndarray:
     img = grab() if img is None else img
     if is_visible(ScreenObjects.BeltExpandable, img) and Config().char["belt_rows"] > 1:
@@ -35,23 +37,23 @@ def _potion_type(img: np.ndarray) -> str:
     """
     Based on cut out image from belt, determines what type of potion it is.
     :param img: Cut out image of a belt slot
-    :return: Any of ["empty", "rejuv", "health", "mana"]
+    :return: Any of ["empty", "rejuv", "health", "mana", "tp"]
     """
     h, w, _ = img.shape
     roi = [int(w * 0.4), int(h * 0.3), int(w * 0.4), int(h * 0.7)]
-    img = cut_roi(img, roi)
-    avg_brightness = np.average(img)
+    cut = cut_roi(img, roi)
+    avg_brightness = np.average(cut)
     if avg_brightness < 47:
         return "empty"
     score_list = []
     # rejuv
-    mask, _ = color_filter(img, Config().colors["rejuv_potion"])
+    mask, _ = color_filter(cut, Config().colors["rejuv_potion"])
     score_list.append((float(np.sum(mask)) / mask.size) * (1/255.0))
     # health
-    mask, _ = color_filter(img, Config().colors["health_potion"])
+    mask, _ = color_filter(cut, Config().colors["health_potion"])
     score_list.append((float(np.sum(mask)) / mask.size) * (1/255.0))
     # mana
-    mask, _ = color_filter(img, Config().colors["mana_potion"])
+    mask, _ = color_filter(cut, Config().colors["mana_potion"])
     score_list.append((float(np.sum(mask)) / mask.size) * (1/255.0))
     # find max score
     max_val = np.max(score_list)
@@ -59,6 +61,8 @@ def _potion_type(img: np.ndarray) -> str:
         idx = np.argmax(score_list)
         types = ["rejuv", "health", "mana"]
         return types[idx]
+    elif template_finder.search("BELT_SCROLL_TP", img).valid:
+        return "tp"
     else:
         return "empty"
 
@@ -88,12 +92,14 @@ def drink_potion(potion_type: str, merc: bool = False, stats: list = []) -> bool
     return False
 
 def update_pot_needs():
-    pot_needs = {"rejuv": 0, "health": 0, "mana": 0}
-    rows_left = {
+    pot_needs = {"rejuv": 0, "health": 0, "mana": 0, "tp": 0}
+    columns_left = {
         "rejuv": Config().char["belt_rejuv_columns"],
         "health": Config().char["belt_hp_columns"],
         "mana": Config().char["belt_mp_columns"],
     }
+    tp_in_belt = columns_left["rejuv"] + columns_left["health"] + columns_left["mana"] < 4
+    columns_left["tp"] = int(tp_in_belt)
     # In case we are in danger that the mouse hovers the belt rows, move it to the center
     screen_mouse_pos = convert_monitor_to_screen(mouse.get_position())
     if screen_mouse_pos[1] > Config().ui_pos["screen_height"] * 0.72:
@@ -111,9 +117,9 @@ def update_pot_needs():
             wait(10)
             os._exit(1)
         if potion_type and potion_type != "empty":
-            rows_left[potion_type] -= 1
-            if rows_left[potion_type] < 0:
-                rows_left[potion_type] += 1
+            columns_left[potion_type] -= 1
+            if columns_left[potion_type] < 0:
+                columns_left[potion_type] += 1
                 key = f"potion{column+1}"
                 for _ in range(5):
                     keyboard.send(Config().char[key])
@@ -121,24 +127,36 @@ def update_pot_needs():
     # calc how many potions are needed
     img = grab()
     current_column = None
+    belt_rows = Config().char["belt_rows"]
+    global tp_column
+    tp_column = -1
     for column in range(4):
-        for row in range(Config().char["belt_rows"]):
+        for row in range(belt_rows):
             potion_type = _potion_type(_cut_potion_img(img, column, row))
             if row == 0:
                 if potion_type != "empty":
                     current_column = potion_type
                 else:
-                    for key in rows_left:
-                        if rows_left[key] > 0:
-                            rows_left[key] -= 1
-                            pot_needs[key] += Config().char["belt_rows"]
+                    for key in columns_left:
+                        if columns_left[key] > 0:
+                            columns_left[key] -= 1
+                            pot_needs[key] += belt_rows
                             break
                     break
             elif current_column is not None and potion_type == "empty":
                 pot_needs[current_column] += 1
+        if current_column == "tp":
+            tp_column = column
     consumables.set_needs("health", pot_needs["health"])
     consumables.set_needs("mana", pot_needs["mana"])
     consumables.set_needs("rejuv", pot_needs["rejuv"])
+    if tp_in_belt:
+        tp_needs = pot_needs["tp"]
+        if belt_rows - tp_needs < 2:
+            tp_needs = 20
+        else:
+            tp_needs *= 5
+        consumables.set_needs("tp", tp_needs)
     close(img)
 
 def fill_up_belt_from_inventory(num_loot_columns: int):
@@ -150,7 +168,7 @@ def fill_up_belt_from_inventory(num_loot_columns: int):
     pot_positions = []
     for column, row in itertools.product(range(num_loot_columns), range(4)):
         center_pos, slot_img = common.get_slot_pos_and_img(img, column, row)
-        found = template_finder.search(["GREATER_HEALING_POTION", "GREATER_MANA_POTION", "SUPER_HEALING_POTION", "SUPER_MANA_POTION", "FULL_REJUV_POTION", "REJUV_POTION"], slot_img, threshold=0.9).valid
+        found = template_finder.search(["GREATER_HEALING_POTION", "GREATER_MANA_POTION", "SUPER_HEALING_POTION", "SUPER_MANA_POTION", "FULL_REJUV_POTION", "REJUV_POTION","INV_SCROLL_TP"], slot_img, threshold=0.9).valid
         if found:
             pot_positions.append(center_pos)
     keyboard.press("shift")

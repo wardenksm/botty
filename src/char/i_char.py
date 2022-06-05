@@ -17,6 +17,7 @@ from screen import grab, convert_monitor_to_screen, convert_screen_to_abs, conve
 import template_finder
 from ocr import Ocr
 from ui_manager import detect_screen_object, ScreenObjects
+from inventory import belt
 
 class IChar:
     _CrossGameCapabilities: None | CharacterCapabilities = None
@@ -228,12 +229,27 @@ class IChar:
         else:
             mouse.click(button="left")
 
+    def cast_tp(self):
+        # cast from belt
+        if belt.tp_column >= 0:
+            if consumables.get_needs("tp") > 10:
+                # Do not use up all tp scrolls in belt
+                return False
+            key = f"potion{belt.tp_column+1}"
+            keyboard.send(Config().char[key])
+            consumables.increment_need("tp", 5)
+            return True
+        # cast from skill hotkey
+        if skills.has_tps():
+            mouse.click(button="right")
+            consumables.increment_need("tp", 1)
+            time.sleep(self._cast_duration)
+            return True
+
     def tp_town(self):
         # will check if tp is available and select the skill
-        if not skills.has_tps():
+        if not self.cast_tp():
             return False
-        mouse.click(button="right")
-        consumables.increment_need("tp", 1)
         roi_mouse_move = [
             int(Config().ui_pos["screen_width"] * 0.3),
             0,
@@ -241,7 +257,7 @@ class IChar:
             int(Config().ui_pos["screen_height"] * 0.7)
         ]
         pos_away = convert_abs_to_monitor((-167, -30))
-        wait(0.8, 1.3) # takes quite a while for tp to be visible
+        wait(0.56, 0.6) # takes quite a while for tp to be visible
         start = time.time()
         retry_count = 0
         while (time.time() - start) < 8:
@@ -251,10 +267,9 @@ class IChar:
                 pos_m = convert_abs_to_monitor((random.randint(-70, 70), random.randint(-70, 70)))
                 self.pre_move()
                 self.move(pos_m)
-                if skills.has_tps():
-                    mouse.click(button="right")
-                    consumables.increment_need("tp", 1)
-                wait(0.8, 1.3) # takes quite a while for tp to be visible
+                if self.cast_tp():
+                    wait(0.56, 0.6) # takes quite a while for tp to be visible
+            pos = None
             if (template_match := detect_screen_object(ScreenObjects.TownPortal)).valid:
                 pos = template_match.center_monitor
                 pos = (pos[0], pos[1] + 30)
