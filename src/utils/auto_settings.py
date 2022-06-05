@@ -4,7 +4,7 @@ import shutil
 
 from config import Config, only_lowercase_letters
 from mss import mss
-from utils.misc import close_down_bnet_launcher, close_down_d2
+from utils.misc import close_down_bnet_launcher, close_down_d2, is_console_on_focus
 
 
 def get_d2r_folder() -> str:
@@ -26,11 +26,13 @@ def get_d2r_folder() -> str:
     return d2_saved_games
 
 def backup_settings():
+    if not is_console_on_focus():
+        return
     d2_saved_games = get_d2r_folder()
     backup_file = f"{d2_saved_games}/Settings_backup.json"
     current_file = f"{d2_saved_games}/Settings.json"
     if os.path.exists(backup_file):
-        r = input("D2R settings backup already exists, are you sure you want to overwrite it? [y] to confirm")
+        r = input("D2R settings backup already exists, are you sure you want to overwrite it? [y] to confirm:")
         if not r == 'y':
             return
     shutil.copyfile(current_file, backup_file)
@@ -39,7 +41,7 @@ def backup_settings():
     backup_file = f"{d2_saved_games}/launch_options_backup.txt"
     current_file = f"{os.getenv('APPDATA')}/Battle.net/Battle.net.config"
     if os.path.exists(backup_file):
-        r = input("D2R launch options backup already exists, are you sure you want to overwrite it? [y] to confirm")
+        r = input("D2R launch options backup already exists, are you sure you want to overwrite it? [y] to confirm:")
         if not r == 'y':
             return
     f = open(current_file)
@@ -50,6 +52,8 @@ def backup_settings():
     print("D2R launch options backed up successfully.")
 
 def restore_settings_from_backup():
+    if not is_console_on_focus():
+        return
     d2_saved_games = get_d2r_folder()
     backup_file = f"{d2_saved_games}/Settings_backup.json"
     current_file = f"{d2_saved_games}/Settings.json"
@@ -118,6 +122,8 @@ def copy_mod_files():
         print(f"You might need to copy the mod files from {old_path} to {new_path} manually.")
 
 def adjust_settings():
+    if not is_console_on_focus():
+        return
     close_down_d2()
     # find monitor res
     sct = mss()

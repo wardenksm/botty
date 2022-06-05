@@ -3,7 +3,7 @@ import keyboard
 import subprocess
 
 import template_finder
-from utils.misc import wait, set_d2r_always_on_top
+from utils.misc import wait, set_d2r_always_on_top, close_down_d2
 from screen import get_offset_state, grab
 from ui.main_menu import MAIN_MENU_MARKERS
 
@@ -23,9 +23,9 @@ def safe_exit(error_code=0):
 
 def kill_game():
     while process_exists("D2R.exe"):
-        os.system("taskkill /f /im  BlizzardError.exe")
-        os.system("taskkill /f /im  D2R.exe")
-        wait(1.0, 1.5)
+        os.system("taskkill /f /im BlizzardError.exe")
+        close_down_d2()
+        wait(1.2, 1.5)
 
 def restart_game(d2r_path, launch_options):
     kill_game()

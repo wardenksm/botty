@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from decimal import InvalidOperation
 import time
 import random
 import ctypes
@@ -16,22 +15,15 @@ import cv2
 import os
 from math import cos, sin, dist
 import subprocess
-from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, HWND_NOTOPMOST
-from win32gui import GetWindowText, SetWindowPos, EnumWindows, GetClientRect, ClientToScreen
+from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, HWND_NOTOPMOST, WM_CLOSE
+from win32gui import GetWindowText, SetWindowPos, EnumWindows, GetClientRect, ClientToScreen, GetForegroundWindow, SetForegroundWindow
+from win32api import PostMessage
+from win32console import GetConsoleWindow
 from win32process import GetWindowThreadProcessId
 import psutil
 
 from rapidfuzz.process import extractOne
 from rapidfuzz.string_metric import levenshtein
-
-def close_down_d2():
-    if remote_grabber:
-        remote_grabber.close_window()
-    else:
-        subprocess.call(["taskkill","/F","/IM","D2R.exe"], stderr=subprocess.DEVNULL)
-
-def close_down_bnet_launcher():
-    subprocess.call(["taskkill","/F","/IM","Battle.net.exe"], stderr=subprocess.DEVNULL)
 
 @dataclass
 class WindowSpec:
@@ -51,6 +43,9 @@ class WindowSpec:
         return result
 
 d2r_hwnd = None
+def close_down_bnet_launcher():
+    subprocess.call(["taskkill","/F","/IM","Battle.net.exe"], stderr=subprocess.DEVNULL)
+
 def find_d2r_window(spec: WindowSpec, offset = (0, 0)) -> tuple[int, int]:
     offset_x, offset_y = offset
     if os.name == 'nt':
@@ -80,6 +75,7 @@ def set_d2r_always_on_top():
             hwnd = d2r_hwnd
         SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE)
         print("Set D2R to be always on top")
+        SetForegroundWindow(hwnd)
     else:
         print('OS not supported, unable to set D2R always on top')
 
@@ -100,6 +96,39 @@ def restore_d2r_window_visibility():
         print("Restored D2R window visibility")
     else:
         print('OS not supported, unable to set D2R always on top')
+
+def close_down_d2():
+    if remote_grabber:
+        remote_grabber.close_window()
+        restore_d2r_window_visibility()
+    else:
+        if not d2r_hwnd:
+            window_list = []
+            EnumWindows(lambda w, l: l.append(w), window_list)
+            for hwnd in window_list:
+                _, process_id = GetWindowThreadProcessId(hwnd)
+                if "D2R.exe" in psutil.Process(process_id).name():
+                    d2r_hwnd = hwnd
+                    break
+        Logger.info(f"Sending WM_CLOSE to HWND {hwnd}...")
+        PostMessage(hwnd, WM_CLOSE, 0, 0)
+
+def is_d2r_window_on_focus():
+    if os.name == 'nt':
+        if d2r_hwnd is None:
+            return True
+        hwnd = GetForegroundWindow()
+        if hwnd == d2r_hwnd:
+            return True
+        else:
+            Logger.info(f"d2r_hwnd={d2r_hwnd}, current foreground={hwnd}")
+    return False
+
+def is_console_on_focus():
+    if os.name == 'nt':
+        if GetConsoleWindow() == GetForegroundWindow():
+            return True
+    return False
 
 def wait(min_seconds, max_seconds = None):
     if max_seconds is None:
