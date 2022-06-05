@@ -14,18 +14,14 @@ import cv2
 import os
 from math import cos, sin, dist
 import subprocess
-from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, HWND_NOTOPMOST
-from win32gui import GetWindowText, SetWindowPos, EnumWindows, GetClientRect, ClientToScreen
-from win32api import GetMonitorInfo, MonitorFromWindow
+from win32con import HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, HWND_NOTOPMOST, WM_CLOSE
+from win32gui import GetWindowText, SetWindowPos, EnumWindows, GetClientRect, ClientToScreen, GetForegroundWindow, SetForegroundWindow
+from win32api import GetMonitorInfo, MonitorFromWindow, SendMessage
+from win32console import GetConsoleWindow
 from win32process import GetWindowThreadProcessId
 import psutil
 
-
-def close_down_d2():
-    subprocess.call(["taskkill","/F","/IM","D2R.exe"], stderr=subprocess.DEVNULL)
-
-def close_down_bnet_launcher():
-    subprocess.call(["taskkill","/F","/IM","Battle.net.exe"], stderr=subprocess.DEVNULL)
+d2r_hwnd = None
 
 @dataclass
 class WindowSpec:
@@ -44,6 +40,21 @@ class WindowSpec:
             result = False
         return result
 
+def close_down_d2():
+    if os.name == 'nt':
+        window_list = []
+        EnumWindows(lambda w, l: l.append(w), window_list)
+        for hwnd in window_list:
+            _, process_id = GetWindowThreadProcessId(hwnd)
+            if "D2R.exe" in psutil.Process(process_id).name():
+                Logger.info(f"Found HWND {hwnd} of pid {process_id}. Sending WM_CLOSE...")
+                SendMessage(hwnd, WM_CLOSE, 0, 0)
+                return
+        subprocess.call(["taskkill","/F","/IM","D2R.exe"], stderr=subprocess.DEVNULL)
+
+def close_down_bnet_launcher():
+    subprocess.call(["taskkill","/F","/IM","Battle.net.exe"], stderr=subprocess.DEVNULL)
+
 def find_d2r_window(spec: WindowSpec, offset = (0, 0)) -> tuple[int, int]:
     offset_x, offset_y = offset
     if os.name == 'nt':
@@ -51,6 +62,8 @@ def find_d2r_window(spec: WindowSpec, offset = (0, 0)) -> tuple[int, int]:
         EnumWindows(lambda w, l: l.append(w), window_list)
         for hwnd in window_list:
             if spec.match(hwnd):
+                global d2r_hwnd
+                d2r_hwnd = hwnd
                 left, top, right, bottom = GetClientRect(hwnd)
                 (left, top), (right, bottom) = ClientToScreen(hwnd, (left, top)), ClientToScreen(hwnd, (right, bottom))
                 return (left + offset_x, top + offset_y)
@@ -64,6 +77,7 @@ def set_d2r_always_on_top():
             if w[1] == "Diablo II: Resurrected":
                 SetWindowPos(w[0], HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE)
                 print("Set D2R to be always on top")
+                SetForegroundWindow(w[0])
     else:
         print('OS not supported, unable to set D2R always on top')
 
@@ -77,6 +91,27 @@ def restore_d2r_window_visibility():
                 print("Restored D2R window visibility")
     else:
         print('OS not supported, unable to set D2R always on top')
+
+def is_d2r_window_on_focus():
+    if os.name == 'nt':
+        if d2r_hwnd is None:
+            return True
+        hwnd = GetForegroundWindow()
+        if hwnd == d2r_hwnd:
+            return True
+        else:
+            Logger.info(f"d2r_hwnd={d2r_hwnd}, current foreground={hwnd}")
+    else:
+        print('OS not supported, unable to set D2R always on top')
+    return False
+
+def is_console_on_focus():
+    if os.name == 'nt':
+        if GetConsoleWindow() == GetForegroundWindow():
+            return True
+    else:
+        print('OS not supported, unable to set D2R always on top')
+    return False
 
 def wait(min_seconds, max_seconds = None):
     if max_seconds is None:

@@ -11,7 +11,7 @@ from config import Config
 from logger import Logger
 from game_controller import GameController
 from utils.graphic_debugger import GraphicDebuggerController
-from utils.misc import restore_d2r_window_visibility
+from utils.misc import restore_d2r_window_visibility, is_d2r_window_on_focus
 from utils.auto_settings import adjust_settings, backup_settings, restore_settings_from_backup
 
 @dataclass
@@ -21,6 +21,8 @@ class Controllers():
 
 
 def start_or_pause_bot(controllers: Controllers):
+    if not is_d2r_window_on_focus():
+        return
     if controllers.game.is_running:
         controllers.game.toggle_pause_bot()
         screen.stop_detecting_window()
