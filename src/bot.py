@@ -461,8 +461,6 @@ class Bot:
             if self._curr_loc:
                 set_pause_state(True)
                 return self.trigger_or_stop("maintenance")
-        if not skills.has_tps():
-            consumables.set_needs("tp", 20)
         set_pause_state(True)
         self.trigger_or_stop("end_game", failed=True)
 
