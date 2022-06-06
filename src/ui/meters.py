@@ -26,3 +26,10 @@ def get_merc_health(img: np.ndarray) -> float:
     _, thresh = cv2.threshold(merc_health_img, 5, 255, cv2.THRESH_BINARY)
     merc_health_percentage = (float(np.sum(thresh)) / thresh.size) * (1/255.0)
     return merc_health_percentage
+
+def is_cursed(img: np.ndarray) -> bool:
+    hsv = cv2.cvtColor(cut_roi(img, Config().ui_roi["curse_status"]), cv2.COLOR_BGR2HSV)
+    range = Config().colors["amplify_damage"]
+    mask = cv2.inRange(hsv, range[0], range[1]) 
+    cnt = cv2.countNonZero(mask)
+    return cnt >= 50
