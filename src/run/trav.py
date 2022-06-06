@@ -31,8 +31,7 @@ class Trav:
         Logger.info("Run Trav")
         if not self._town_manager.open_wp(start_loc):
             return False
-        wait(0.4)
-        if waypoint.use_wp("Travincal"):
+        if waypoint.use_wp("Travincal", curr_active_act = self._town_manager.get_act_idx_from_location(start_loc)):
             return Location.A3_TRAV_START
         return False
 
