@@ -227,8 +227,7 @@ class Diablo:
             raise ValueError("Diablo requires teleport")
         if not self._town_manager.open_wp(start_loc):
             return False
-        wait(0.4)
-        waypoint.use_wp("River of Flame")
+        waypoint.use_wp("River of Flame", curr_active_act = self._town_manager.get_act_idx_from_location(start_loc))
         return Location.A4_DIABLO_WP
 
     def open_fake_seal(self, seal_layout, node_seal1_automap, seal1_opentemplates: list) -> bool:

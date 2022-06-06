@@ -37,8 +37,7 @@ class Arcane:
             raise ValueError("Arcane requires teleport")
         if not self._town_manager.open_wp(start_loc):
             return False
-        wait(0.4)
-        if waypoint.use_wp("Arcane Sanctuary"):
+        if waypoint.use_wp("Arcane Sanctuary", curr_active_act = self._town_manager.get_act_idx_from_location(start_loc)):
             return Location.A2_ARC_START
         return False
 

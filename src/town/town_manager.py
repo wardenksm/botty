@@ -44,6 +44,12 @@ class TownManager:
             location = Location.A1_TOWN_START
         return location
 
+    @staticmethod
+    def get_act_idx_from_location(loc: Location) -> int:
+        if loc.upper()[0] != 'A':
+            return 0
+        return int(loc[1])
+
     def wait_for_town_spawn(self, timeout: float = 30) -> Location:
         """Wait for the char to spawn in town after starting a new game
         :param timeout: Optional float value for time out in seconds, defaults to None
@@ -80,7 +86,7 @@ class TownManager:
             return curr_loc
         # if not, move to the desired act via waypoint
         if not self._acts[curr_act].open_wp(curr_loc): return False
-        waypoint.use_wp(act = act_idx, idx = 0)
+        waypoint.use_wp(act = act_idx, idx = 0, curr_active_act = 0)
         return self._acts[act].get_wp_location()
 
     def heal(self, curr_loc: Location) -> Location | bool:
@@ -122,13 +128,13 @@ class TownManager:
                     else:
                         Logger.error("buy_consumables: Error purchasing mana potions")
             # Buy TP scrolls
-            if consumables.get_needs("tp") > 0:
+            if consumables.get_needs("tp") > 10:
                 if vendor.buy_item(template_name="INV_SCROLL_TP", shift_click = True, img=img):
                     consumables.set_needs("tp", 0)
                 else:
                     Logger.error("buy_consumables: Error purchasing teleport scrolls")
             # Buy ID scrolls
-            if consumables.get_needs("id") > 0:
+            if consumables.get_needs("id") > 10:
                 if vendor.buy_item(template_name="INV_SCROLL_ID", shift_click = True, img=img):
                     consumables.set_needs("id", 0)
                 else:
@@ -218,7 +224,7 @@ class TownManager:
         if not new_loc: return False, False
         new_loc = self._acts[Location.A5_TOWN_START].open_stash(new_loc)
         if not new_loc: return False, False
-        wait(1.0)
+        #wait(1.0)
         items = personal.stash_all_items(items)
         return new_loc, items
 
