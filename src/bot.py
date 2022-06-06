@@ -347,7 +347,7 @@ class Bot:
                 items = result_items
                 sell_items = any([item.sell for item in items]) if items else None
                 Logger.debug(f"Needs: {consumables.get_needs()}")
-        elif meters.get_health(img) < 0.6 or meters.get_mana(img) < 0.2:
+        elif meters.get_health(img) < 0.6 or meters.get_mana(img) < 0.2 or meters.is_cursed(img):
             Logger.info("Healing at next possible Vendor")
             self._curr_loc = self._town_manager.heal(self._curr_loc)
         if not self._curr_loc:
