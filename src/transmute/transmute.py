@@ -135,7 +135,7 @@ class Transmute:
             y_start, y_end = row*slot_h, slot_h*(row+1)
             x_start, x_end = column*slot_w, slot_w*(column+1)
             slot_img = img[y_start:y_end, x_start:x_end]
-            if not self._is_slot_empty(slot_img[+4:-4, +4:-4], treshold=36):
+            if not self._is_slot_empty(slot_img[+4:-4, +4:-4], threshold=36):
                 result.set_empty((column, row))
             match = template_finder.search(
                 known_items, slot_img, threshold=0.91, best_match=True)
@@ -145,10 +145,10 @@ class Transmute:
 
         return result
 
-    def _is_slot_empty(self, img, treshold=16.0):
+    def _is_slot_empty(self, img, threshold=16.0):
         slot_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         avg_brightness = np.average(slot_img[:, :, 2])
-        return avg_brightness > treshold
+        return avg_brightness > threshold
 
     def inspect_inventory_area(self, known_items) -> InventoryCollection:
         return self.inspect_area(4, Config().char["num_loot_columns"], Config().ui_roi["right_inventory"], known_items)
