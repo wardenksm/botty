@@ -11,10 +11,10 @@ from game_stats import GameStats
 from health_manager import HealthManager
 from logger import Logger
 from messages import Messenger
-from screen import grab, get_offset_state
+from screen import grab, get_offset_state, get_sandbox_offset_state, set_sandbox_offset
 from utils.restart import restart_game, safe_exit
 from utils.misc import kill_thread, set_d2r_always_on_top, restore_d2r_window_visibility
-
+import template_finder
 
 class GameController:
     def __init__(self):
@@ -122,6 +122,15 @@ class GameController:
 
     def setup_screen(self):
         if get_offset_state():
+            if Config().general["use_sandbox"] and not get_sandbox_offset_state():
+                match = template_finder.search("D2R", grab(), threshold=0.9, use_grayscale=False)
+                if match.valid:
+                    Logger.info(f"Found d2r icon at {match.center} in sandbox. Adjusting offset.")
+                    set_sandbox_offset(match.center[0] - 25, match.center[1] + 25)
+                    time.sleep(1)
+                else:
+                    Logger.error("Failed to find d2r window in sandbox")
+                    return False
             return True
         return False
 

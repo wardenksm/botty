@@ -126,6 +126,7 @@ class Config:
 
 
         self.general = {
+            "use_sandbox": bool(int(self._select_val("general", "use_sandbox"))),
             "saved_games_folder": self._select_val("general", "saved_games_folder"),
             "name": _default_iff(self._select_val("general", "name"), "", "botty"),
             "max_game_length_s": float(self._select_val("general", "max_game_length_s")),

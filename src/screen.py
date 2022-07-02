@@ -11,6 +11,8 @@ monitor_roi = sct.monitors[0]
 found_offsets = False
 monitor_x_range = None
 monitor_y_range = None
+sandbox_x_offset = 0
+sandbox_y_offset = 0
 detect_window = True
 detect_window_thread = None
 last_grab = None
@@ -25,6 +27,14 @@ FIND_WINDOW = WindowSpec(
 def get_offset_state():
     global found_offsets
     return found_offsets
+
+def get_sandbox_offset_state():
+    return sandbox_x_offset or sandbox_y_offset
+
+def set_sandbox_offset(x, y):
+    global sandbox_x_offset, sandbox_y_offset
+    sandbox_x_offset = x
+    sandbox_y_offset = y
 
 def start_detecting_window():
     global detect_window, detect_window_thread
@@ -44,7 +54,7 @@ def find_and_set_window_position():
     position = find_d2r_window(FIND_WINDOW, offset=Config(
     ).advanced_options["window_client_area_offset"])
     if position is not None:
-        set_window_position(*position)
+        set_window_position(position[0] + sandbox_x_offset, position[1] + sandbox_y_offset)
     wait(1)
 
 def set_window_position(offset_x: int, offset_y: int):
