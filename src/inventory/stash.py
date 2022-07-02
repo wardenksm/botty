@@ -1,6 +1,6 @@
 from config import Config
 import os
-from utils.misc import wait
+from utils.misc import close_down_d2, wait
 from logger import Logger
 from messages import Messenger
 
@@ -22,6 +22,6 @@ def stash_full():
     Logger.error("All stash is full, quitting")
     if Config().general["custom_message_hook"]:
         Messenger().send_stash()
-    os.system("taskkill /f /im  D2R.exe")
+    close_down_d2()
     wait(1.0, 1.5)
     os._exit(0)

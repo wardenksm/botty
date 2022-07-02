@@ -2,9 +2,9 @@ import json
 import os
 import shutil
 
-from config import Config
+from config import Config, only_lowercase_letters
 from mss import mss
-from utils.misc import close_down_bnet_launcher, close_down_d2, only_lowercase_letters
+from utils.misc import close_down_bnet_launcher, close_down_d2
 
 
 def get_d2r_folder() -> str:

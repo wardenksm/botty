@@ -15,7 +15,6 @@ from screen import grab, get_offset_state
 from utils.restart import restart_game, safe_exit
 from utils.misc import kill_thread, set_d2r_always_on_top, restore_d2r_window_visibility
 
-
 class GameController:
     def __init__(self):
         self.is_running = False

@@ -6,10 +6,14 @@ import os
 from dataclasses import dataclass
 from logger import Logger
 config_lock = threading.Lock()
-from utils.misc import wait, only_lowercase_letters
 
 def _default_iff(value, iff, default = None):
     return default if value == iff else value
+
+def only_lowercase_letters(value):
+    if not (x := ''.join(filter( lambda x: x in 'abcdefghijklmnopqrstuvwxyz', value ))):
+        x = "botty"
+    return x
 
 class Config:
     data_loaded = False
@@ -125,6 +129,7 @@ class Config:
 
 
         self.general = {
+            "sandbox_ip": str(self._select_val("general", "sandbox_ip")),
             "saved_games_folder": self._select_val("general", "saved_games_folder"),
             "name": _default_iff(self._select_val("general", "name"), "", "botty"),
             "max_game_length_s": float(self._select_val("general", "max_game_length_s")),

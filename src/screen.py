@@ -5,15 +5,18 @@ from utils.misc import WindowSpec, find_d2r_window, wait
 from config import Config
 import threading
 import time
+from remote_grabber import remote_grabber
 
 sct = mss()
 monitor_roi = sct.monitors[0]
 found_offsets = False
 monitor_x_range = None
 monitor_y_range = None
+sandbox_x_offset = 0
+sandbox_y_offset = 0
 detect_window = True
 detect_window_thread = None
-last_grab = None
+last_grab = 0.0
 cached_img = None
 cached_img_lock = threading.Lock()
 hud_limits = np.load("./assets/hud_limits.npy")
@@ -26,6 +29,9 @@ FIND_WINDOW = WindowSpec(
 def get_offset_state():
     global found_offsets
     return found_offsets
+
+def get_sandbox_offset_state():
+    return sandbox_x_offset or sandbox_y_offset
 
 def start_detecting_window():
     global detect_window, detect_window_thread
@@ -42,11 +48,13 @@ def detect_window_position():
     Logger.debug('Detect window thread stopped')
 
 def find_and_set_window_position():
-    position = find_d2r_window(FIND_WINDOW, offset=Config(
-    ).advanced_options["window_client_area_offset"])
+    global sandbox_x_offset, sandbox_y_offset
+    position = find_d2r_window(FIND_WINDOW, offset=Config().advanced_options["window_client_area_offset"])
     if position is not None:
-        set_window_position(*position)
-    wait(1)
+        if remote_grabber:
+            sandbox_x_offset, sandbox_y_offset = remote_grabber.get_client_offset()
+        set_window_position(position[0] + sandbox_x_offset, position[1] + sandbox_y_offset)
+    wait(2)
 
 def set_window_position(offset_x: int, offset_y: int):
     global monitor_roi, monitor_x_range, monitor_y_range, found_offsets
@@ -69,20 +77,32 @@ def stop_detecting_window():
     if detect_window_thread:
         detect_window_thread.join()
 
-def grab(force_new: bool = False) -> np.ndarray:
-    global monitor_roi
-    global cached_img
-    global last_grab
-    # with 25fps we have 40ms per frame. If we check for 20ms range to make sure we can still get each frame if we want.
-    if not force_new and cached_img is not None and last_grab is not None and time.perf_counter() - last_grab < 0.04:
+def grab_remote(force_new: bool = False) -> np.ndarray:
+    global cached_img, last_grab
+    t = time.perf_counter()
+    with cached_img_lock:
+        if force_new or t - last_grab > 0.04 or cached_img is None:
+            cached_img = remote_grabber.grab(cached_img)
+            last_grab = t
+        if cached_img is None:
+            Logger.error('Invalid image received!')
         return cached_img
-    else:
-        with cached_img_lock:
-            last_grab = time.perf_counter()
-        img = np.array(sct.grab(monitor_roi))
-        with cached_img_lock:
+
+def grab_gdi(force_new: bool = False) -> np.ndarray:
+    global monitor_roi, cached_img, last_grab
+    t = time.perf_counter()
+    with cached_img_lock:
+        # with 25fps we have 40ms per frame. If we check for 20ms range to make sure we can still get each frame if we want.
+        if force_new or t - last_grab > 0.04 or cached_img is None:
+            img = np.array(sct.grab(monitor_roi))
             cached_img = img[:, :, :3]
+            last_grab = t
         return cached_img
+
+if remote_grabber:
+    grab = grab_remote
+else:
+    grab = grab_gdi
 
 # TODO: Move the below funcs to utils(?)
 
