@@ -356,7 +356,7 @@ def press_npc_btn(npc_key: Npc, action_btn_key: str):
         center_mouse()
     else:
         Logger.error(f"Could not find {action_btn_key} btn. Should not happen! Continue...")
-        keyboard.send("esc")
+        keyboard.send(Config().char["clear_screen"])
 
 
 # Testing: Stand close to Qual-Kehk or Malah and run
