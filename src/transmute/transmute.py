@@ -16,6 +16,7 @@ import numpy as np
 import keyboard
 import cv2
 from inventory import personal, common
+from inventory.stash import set_curr_stash
 
 CHIPPED_GEMS = [
     "INVENTORY_TOPAZ_CHIPPED",
@@ -67,6 +68,12 @@ PERFECT_GEMS = [
     "INVENTORY_SKULL_PERFECT"
 ]
 
+RUNE_UPGRADE = {
+    "ith":"TAL",
+    "tal":"RAL",
+    "ral":"ORT",
+    "ort":"THUL"
+}
 
 class Transmute:
     @staticmethod
@@ -157,7 +164,7 @@ class Transmute:
         stash = Stash()
         for i in range(4):
             common.select_tab(i)
-            wait(0.4, 0.5)
+            wait(0.3, 0.4)
             tab = self.inspect_area(
                 10, 10, Config().ui_roi["left_inventory"], gemsToTransmute)
             stash.add_tab(i, tab)
@@ -199,32 +206,39 @@ class Transmute:
             return False
         return self._game_stats._game_counter - self._last_game >= int(every_x_game)
 
-    def run_transmutes(self, force=False) -> None:
+    def run_transmutes(self, force=False) -> bool:
         if not wait_until_visible(ScreenObjects.GoldBtnStash, timeout = 8).valid:
             Logger.error("Could not find stash menu. Continue...")
-            return
+            return False
         if not force and not self.should_transmute():
             Logger.info(f"Skipping transmutes. Force: {force}, Game#: {self._game_stats._game_counter}")
-            return None
+            return False
         transmute_gems=Config().configs["transmute"]["parser"]["transmute"]
         gemsToTransmute=[]
         gemsToPutBack=[]
         gemLoggerName=""
         for gem in transmute_gems:
             gemLoggerName+=gem+" "
-            if gem == "chipped":
-                gemsToTransmute+=CHIPPED_GEMS
-                gemsToPutBack+=FLAWED_GEMS
-            if gem == "flawed":
-                gemsToTransmute+=FLAWED_GEMS
-                gemsToPutBack+=STANDARD_GEMS
-            if gem == "standard":
-                gemsToTransmute+=STANDARD_GEMS
-                gemsToPutBack+=FLAWLESS_GEMS
-            if gem == "flawless":
-                gemsToTransmute+=FLAWLESS_GEMS
-                gemsToPutBack+=PERFECT_GEMS
+            match gem:
+                case "chipped":
+                    gemsToTransmute+=CHIPPED_GEMS
+                    gemsToPutBack+=FLAWED_GEMS
+                case "flawed":
+                    gemsToTransmute+=FLAWED_GEMS
+                    gemsToPutBack+=STANDARD_GEMS
+                case "standard":
+                    gemsToTransmute+=STANDARD_GEMS
+                    gemsToPutBack+=FLAWLESS_GEMS
+                case "flawless":
+                    gemsToTransmute+=FLAWLESS_GEMS
+                    gemsToPutBack+=PERFECT_GEMS
+            if gem in RUNE_UPGRADE:
+                gemsToTransmute.append(gem.upper())
+                gemsToPutBack.append(RUNE_UPGRADE[gem])
         self._run_gem_transmutes(gemsToTransmute,gemsToPutBack,gemLoggerName)
+        # reset stash full
+        set_curr_stash(items = 3 if Config().char["fill_shared_stash_first"] else 0)
+        return True
 
     def check_cube_empty(self,gemsToTransmute) -> bool:
         self.open_cube()
