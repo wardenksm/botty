@@ -84,10 +84,16 @@ class HealthManager:
         Logger.info("Start health monitoring")
         self._do_monitor = True
         self._did_chicken = False
-        start = time.time()
-
+        start = time.perf_counter()
+        prev_tick = 0
         while self._do_monitor:
-            time.sleep(0.1)
+            curr_tick = time.perf_counter()
+            delta = 0.04 - curr_tick + prev_tick
+            if delta > 0:
+                time.sleep(delta)
+                prev_tick = time.perf_counter()
+            else:
+                prev_tick = curr_tick
             # Wait until the flag is reset by main.py
             if self._did_chicken or get_pause_state(): continue
             img = grab()
