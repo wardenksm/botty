@@ -75,7 +75,7 @@ class ScreenObjects:
         use_grayscale=True
     )
     Loading=ScreenObject(
-        ref=["LOADING", "CREATING_GAME"],
+        ref=["LOADING"],
         roi="difficulty_select",
         threshold=0.9,
         use_grayscale=True
