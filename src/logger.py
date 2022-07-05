@@ -9,7 +9,7 @@ from colorama import Fore, Back, Style, init
 init()
 
 class CustomFormatter(logging.Formatter):
-    _format = f'[{__version__} %(asctime)s] %(levelname)-10s %(message)s'
+    _format = f'[%(asctime)s] %(levelname)-8s %(message)s'
 
     FORMATS = {
         logging.DEBUG:    Fore.WHITE          + _format + Fore.WHITE,
