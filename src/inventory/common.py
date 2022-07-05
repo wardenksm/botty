@@ -221,9 +221,9 @@ def select_tab(idx: int):
         tab = tab_properties(idx)
         pos = convert_screen_to_monitor(tab["center"])
         mouse.move(*pos)
-        wait(0.2, 0.3)
+        wait(0.1, 0.15)
         mouse.click("left")
-        wait(0.2, 0.3)
+        wait(0.2, 0.25)
 
 if __name__ == "__main__":
     import os
