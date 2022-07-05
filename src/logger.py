@@ -7,8 +7,6 @@ from version import __version__
 from colorama import Fore, Back, Style, init
 import time
 
-init()
-
 class CustomFormatter(logging.Formatter):
     _format = f'[{__version__} %(asctime)s] %(levelname)-10s %(message)s'
 
@@ -67,12 +65,14 @@ class Logger:
         """
         Setup logger for StringIO, console and file handler
         """
-        Logger._logger_level = lvl
-
         if Logger.logger is not None:
+            if Logger._logger_level == lvl:
+                return
             Logger.logger.warning("WARNING: logger was setup already, deleting all previously existing handlers")
             for hdlr in Logger.logger.handlers[:]:  # remove all old handlers
                 Logger.logger.removeHandler(hdlr)
+
+        Logger._logger_level = lvl
 
         # Create the logger
         Logger.logger = logging.getLogger("botty")

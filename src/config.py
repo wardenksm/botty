@@ -96,7 +96,6 @@ class Config:
         self.char["stash_gold"] = True
 
     def load_data(self):
-        Logger.debug("Loading config")
         self.configs = {
             "config": {"parser": configparser.ConfigParser(), "vars": {}},
             "game": {"parser": configparser.ConfigParser(), "vars": {}},
