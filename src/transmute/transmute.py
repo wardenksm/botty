@@ -67,6 +67,12 @@ PERFECT_GEMS = [
     "INVENTORY_SKULL_PERFECT"
 ]
 
+RUNE_UPGRADE = {
+    "ith":"TAL",
+    "tal":"RAL",
+    "ral":"ORT",
+    "ort":"THUL"
+}
 
 class Transmute:
     @staticmethod
@@ -162,7 +168,7 @@ class Transmute:
         stash = Stash()
         for i in range(4):
             common.select_tab(i)
-            wait(0.4, 0.5)
+            wait(0.3, 0.4)
             tab = self.inspect_area(
                 10, 10, Config().ui_roi["left_inventory"], gemsToTransmute)
             stash.add_tab(i, tab)
@@ -217,18 +223,22 @@ class Transmute:
         gemLoggerName=""
         for gem in transmute_gems:
             gemLoggerName+=gem+" "
-            if gem == "chipped":
-                gemsToTransmute+=CHIPPED_GEMS
-                gemsToPutBack+=FLAWED_GEMS
-            if gem == "flawed":
-                gemsToTransmute+=FLAWED_GEMS
-                gemsToPutBack+=STANDARD_GEMS
-            if gem == "standard":
-                gemsToTransmute+=STANDARD_GEMS
-                gemsToPutBack+=FLAWLESS_GEMS
-            if gem == "flawless":
-                gemsToTransmute+=FLAWLESS_GEMS
-                gemsToPutBack+=PERFECT_GEMS
+            match gem:
+                case "chipped":
+                    gemsToTransmute+=CHIPPED_GEMS
+                    gemsToPutBack+=FLAWED_GEMS
+                case "flawed":
+                    gemsToTransmute+=FLAWED_GEMS
+                    gemsToPutBack+=STANDARD_GEMS
+                case "standard":
+                    gemsToTransmute+=STANDARD_GEMS
+                    gemsToPutBack+=FLAWLESS_GEMS
+                case "flawless":
+                    gemsToTransmute+=FLAWLESS_GEMS
+                    gemsToPutBack+=PERFECT_GEMS
+            if gem in RUNE_UPGRADE:
+                gemsToTransmute.append(gem.upper())
+                gemsToPutBack.append(RUNE_UPGRADE[gem])
         return self._run_gem_transmutes(gemsToTransmute,gemsToPutBack,gemLoggerName)
 
     def check_cube_empty(self,gemsToTransmute) -> bool:
