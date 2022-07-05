@@ -3,7 +3,7 @@ from game_stats import GameStats
 from item import ItemFinder, Item
 from item.item_cropper import ItemText
 from logger import Logger
-from screen import grab, convert_screen_to_monitor
+from screen import grab, convert_screen_to_monitor, convert_monitor_to_screen
 import keyboard
 import cv2
 import time
@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 import template_finder
 from config import Config
-from utils.misc import wait, is_in_roi, mask_by_roi
+from utils.misc import color_filter, wait, is_in_roi, mask_by_roi, cut_roi
 from utils.custom_mouse import mouse
 from inventory import stash, common, vendor
 from ui import view
@@ -499,7 +499,9 @@ def transfer_items(items: list, action: str = "drop", img: np.ndarray = None) ->
         # if selling, control+click to sell
         if (action == "drop" and not left_panel_open) or action in ["sell", "stash"]:
             keyboard.send('ctrl', do_release=False)
-            wait(0.1, 0.2)
+            #wait(0.1, 0.2)
+        slot_w = Config().ui_pos["slot_width"]
+        slot_h = Config().ui_pos["slot_height"]
         for item in filtered:
             pre_hover_img = grab()
             _, slot_img = common.get_slot_pos_and_img(pre_hover_img, item.column, item.row)
@@ -513,11 +515,20 @@ def transfer_items(items: list, action: str = "drop", img: np.ndarray = None) ->
                 continue
             # move to item position and left click
             mouse.move(*item.pos, randomize=4, delay_factor=[0.2, 0.4])
-            wait(0.2, 0.4)
+            mouse_pos = convert_monitor_to_screen(item.pos)
+            wait(0.2, 0.3)
             pre_transfer_img = grab()
+            grid_roi = [mouse_pos[0] - slot_w // 2, mouse_pos[1] - slot_h // 2, slot_w, slot_h]
+            mouse_grid = cut_roi(pre_hover_img, grid_roi)
+            mask = color_filter(mouse_grid, Config().colors["black"])[0]
             mouse.press(button="left")
             # wait for inventory image to update indicating successful transfer / item select
-            success = wait_for_update(pre_transfer_img, Config().ui_roi["open_inventory_area"], 3)
+            if cv2.countNonZero(mask) > 800:
+                # grid is black, nothing at mouse
+                Logger.warning(f"Nothing found at {item.pos}")
+                success = True
+            else:
+                success = wait_for_update(pre_transfer_img, grid_roi, 2)
             mouse.release(button="left")
             if not success:
                 Logger.warning(f"transfer_items: inventory unchanged after attempting to {action} item at position {item.pos}")
