@@ -1,5 +1,4 @@
 from inventory import belt
-from pather import Location
 import cv2
 import time
 import keyboard
@@ -147,6 +146,7 @@ class HealthManager:
                     if self._count_panel_detects >= 2:
                         self._count_panel_detects = 0
                         Logger.warning(f"Found an open inventory / quest / skill / stats page again. Chicken to dismiss.")
+                        keyboard.send("esc")
                         self._do_chicken(img)
                     common.close()
         Logger.debug("Stop health monitoring")
