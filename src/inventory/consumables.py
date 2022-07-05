@@ -27,15 +27,15 @@ class Consumables:
 
 consumable_needs = Consumables()
 item_consumables_map = {
-    "misc_rejuvenation_potion": "rejuv",
-    "misc_full_rejuvenation_potion": "rejuv",
-    "misc_super_healing_potion": "health",
-    "misc_greater_healing_potion": "health",
-    "misc_super_mana_potion": "mana",
-    "misc_greater_mana_potion": "mana",
-    "misc_scroll_tp": "tp",
-    "misc_scroll_id": "id",
-    "misc_key": "key"
+    "rejuvenation potion": "rejuv",
+    "full rejuvenation potion": "rejuv",
+    "super healing potion": "health",
+    "greater healing potion": "health",
+    "super mana potion": "mana",
+    "greater mana potion": "mana",
+    "scroll of town portal": "tp",
+    "scroll of identify": "id",
+    "key": "key"
 }
 pot_cols = {
     "rejuv": Config().char["belt_rejuv_columns"],

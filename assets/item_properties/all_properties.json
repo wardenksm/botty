@@ -1,0 +1,228 @@
+{
+ "DEFENSE":{
+  "defs":["Defense: [0-9]+",0],
+  "def_clvl":["Character Level",0],
+  "pdef":["[0-9]+ Defense",0],
+  "edef":["[0-9]+% Enhanced Defense",0],
+  "itd":["Ignore Target",-1],
+  "def_ph":["[0-9]+ to Monster",0],
+  "dec_td":["[0-9]+% Target",0]
+ },
+ "SOCKET":{
+  "sockets":["Socketed .[1-9]",0]
+ },
+ "ETHEREAL":{
+  "eth":["Cannot", -1]
+ },
+ "CHARGES":{
+  "charge_tp":["Teleport",0],
+  "charge_en":["Enchant",0],
+  "charge_lr":["Lower Resist",0],
+  "charge_lt":["Life Tap",0],
+  "charge_dv":["Dim Vision",0],
+  "charge_att":["Attact",0],
+  "charge_con":["Confuse",0]
+ },
+ "STRENGTH":{
+  "req_str":["Required Strength",0],
+  "str_clvl":["Character Level",0],
+  "str":["[0-9]+ to Str",0]
+ },
+ "DEXTERITY":{
+  "req_dex":["Required Dexterity",0],
+  "dex_clvl":["Character Level",0],
+  "dex":["[0-9]+ to Dex",0]
+ },
+ "INCREASED":{
+  "ias":["[0-9]+% Increased Attack Speed",0],
+  "ctb":["[0-9]+% Increased Chance of Block",0]
+ },
+ "CHANCE":{
+  "ow":["Open Wounds",0],
+  "cb":["Crushing Blow",0],
+  "die":["you Die",-1],
+  "mf":["Getting Magic Items",0],
+  "amp_striking":["Amplify Damage on striking",0],
+  "fn_struck":["Frost Nova when struck",0]
+ },
+ "RESIST":{
+  "all_res":["All Resistances .[0-9]+",0],
+  "fr":["Fire Resist .[0-9]+",0],
+  "lr":["Lightning Resist .[0-9]+",0],
+  "cr":["Cold Resist .[0-9]+",0],
+  "pr":["Poison Resist .[0-9]+",0],
+  "mr":["Magic Resist .[0-9]+",0],
+  "enemy_fr":["Enemy Fire",0],
+  "enemy_lr":["Enemy Lightning",0],
+  "enemy_cr":["Enemy Cold",0],
+  "enemy_pr":["Enemy Poison",0]
+ },
+ "FASTER":{
+  "fhr":["[0-9]+% Faster Hit",0],
+  "frw":["[0-9]+% Faster Run",0],
+  "fcr":["[0-9]+% Faster Cast",0],
+  "fbr":["[0-9]+% Faster Block",0]
+ },
+ "REDUCED":{
+  "mdr":["Magic Damage",0],
+  "phy_res":["Damage Reduced by [0-9]+%",0],
+  "plr":["Poison Length",0],
+  "dr":["Damage Reduced",0]
+ },
+ "LIFE":{
+  "life_clvl":["Character Level",0],
+  "life":["[0-9]+ to Life",0],
+  "max_life":["Maximum Life [0-9]+",0],
+  "life_rep":["Replenish Life",0],
+  "ll":["[0-9]+% Life stolen",0],
+  "life_edk":["after each Demon Kill",0],
+  "life_ek":["after each Kill",0]
+ },
+ "MANA":{
+  "mana_clvl":["Character Level",0],
+  "mana":["[0-9]+ to Mana",0],
+  "max_mana":["Maximum Mana [0-9]+",0],
+  "lm":["[0-9]+% Mana stolen",0],
+  "dtm":["[0-9]+% Damage Taken Goes",0],
+  "reg_mana":["Regenerate Mana [0-9]+%",0],
+  "mana_ek":["after each Kill",0]
+ },
+ "SKILL":{
+  "all_skill":["[1-9] to All",0],
+  "ama_skill":["[1-9] to Amazon",0],
+  "pal_skill":["[1-9] to Paladin",0],
+  "nec_skill":["[1-9] to Necro",0],
+  "sor_skill":["[1-9] to Sorc",0],
+  "bar_skill":["[1-9] to Barb",0],
+  "asn_skill":["[1-9] to Assassin",0],
+  "dru_skill":["[1-9] to Druid",0],
+  "fire_skill":["[1-9] to Fire Skills",0]
+ },
+ "ONLY":{
+  "cold_skill":["[1-9] to Cold Skills",0],
+  "light_skill":["[1-9] to Lightning Skills",0],
+  "jav_skill":["[1-9] to Javelin and",0],
+  "pas_skill":["[1-9] to Passive",0],
+  "bow_skill":["[1-9] to Bow",0],
+  "daura_skill":["[1-9] to Defensive",0],
+  "oaura_skill":["[1-9] to Offensive",0],
+  "pcom_skill":["[1-9] to Combat Skills .Pal",0],
+  "pb_skill":["[1-9] to Poison",0],
+  "cur_skill":["[1-9] to Curses",0],
+  "nsum_skill":["[1-9] to Summoning Skills .Nec",0],
+  "wc_skill":["[1-9] to Warcries",0],
+  "bcom_skill":["[1-9] to Combat Skills .Bar",0],
+  "master_skill":["[1-9] to Masteries",0],
+  "dsum_skill":["[1-9] to Summoning Skills .Dru",0],
+  "shape_skill":["[1-9] to Shape",0],
+  "elem_skill":["[1-9] to Elemental",0],
+  "trap_skill":["[1-9] to Traps",0],
+  "shad_skill":["[1-9] to Shadow Disciplines",0],
+  "mart_skill":["[1-9] to Martial",0],
+  "sor_fb":["[1-9] to Fire Ball",0],
+  "sor_en":["[1-9] to Enchant",0],
+  "sor_met":["[1-9] to Meteor",0],
+  "sor_fm":["[1-9] to Fire Mastery",0],
+  "sor_hydra":["[1-9] to Hydra",0],
+  "sor_cb":["[1-9] to Charged Bolt",0],
+  "sor_light":["[1-9] to Lightning .Sor",0],
+  "sor_cl":["[1-9] to Chain Light",0],
+  "sor_nova":["[1-9] to Nova",0],
+  "sor_tp":["[1-9] to Teleport",0],
+  "sor_ts":["[1-9] to Thunder Storm",0],
+  "sor_es":["[1-9] to Energy Shield",0],
+  "sor_lm":["[1-9] to Lightning Mastery",0],
+  "sor_ib":["[1-9] to Ice Blast",0],
+  "sor_gs":["[1-9] to Glacial",0],
+  "sor_blz":["[1-9] to Blizzard",0],
+  "sor_fo":["[1-9] to Frozen Orb",0],
+  "sor_cm":["[1-9] to Cold Mastery",0],
+  "asn_ls":["[1-9] to Lightning Sentry",0],
+  "asn_ds":["[1-9] to Death Sentry",0],
+  "asn_wb":["[1-9] to Weapon Block",0],
+  "asn_fade":["[1-9] to Fade",0],
+  "asn_sw":["[1-9] to Shadow Warrior",0],
+  "asn_sm":["[1-9] to Shadow Master",0],
+  "asn_mb":["[1-9] to Mind",0],
+  "asn_venom":["[1-9] to Venom",0],
+  "asn_dt":["[1-9] to Dragon Tail",0],
+  "asn_df":["[1-9] to Dragon Flight",0],
+  "asn_bsentinel":["[1-9] to Blade Sentinel",0],
+  "asn_bshield":["[1-9] to Blade Shield",0],
+  "nec_bs1":["[1-9] to Bone Spear",0],
+  "nec_bs2":["[1-9] to Bone Spirit",0],
+  "nec_lr":["[1-9] to Lower Resist",0],
+  "nec_dec":["[1-9] to Decrepify",0],
+  "nec_pn":["[1-9] to Poison Nova",0],
+  "nec_rev":["[1-9] to Revive",0],
+  "nec_sm":["[1-9] to Skeleton Mastery",0],
+  "bar_bo":["[1-9] to Battle Order",0],
+  "dru_tor":["[1-9] to Tornado",0],
+  "pal_conv":["[1-9] to Conviction",0],
+  "pal_foh":["[1-9] to Fist of",0]
+ },
+ "FREEZE":{
+  "ft":["Freezes target",-1],
+  "hfd":["Half Freeze",-1]
+ },
+ "DAMAGE":{
+  "max_dmg":["[0-9]+ to Maximum",0],
+  "min_dmg":["[0-9]+ to Minimum",0],
+  "ed":["[0-9]+% Enhanced Damage",0],
+  "emax_dmg":["[0-9]+% Enhanced Maximum",0],
+  "emin_dmg":["[0-9]+% Enhanced Minimum",0],
+  "dtd":["to Demons",0],
+  "dtu":["to Undead",0],
+  "dmg":["Damage .[0-9]+",0],
+  "minmax_dmg":["Adds [0-9]+-[0-9]+ damage",10],
+  "pd":["[0-9]+ poison",0],
+  "fd":["[0-9]+ fire",10],
+  "cd":["[0-9]+ cold",10],
+  "ld":["[0-9]+ lightning",10],
+  "md":["[0-9]+ magic",10],
+  "epd":["[0-9]+% to Poison Skill",0],
+  "efd":["[0-9]+% to Fire Skill",0],
+  "ecd":["[0-9]+% to Cold Skill",0],
+  "eld":["[0-9]+% to Lightning Skill",0]
+ },
+ "RATING":{
+  "dar":["against Demons",0],
+  "uar":["against Undead",0],
+  "ear":["[0-9]+% Bonus to Attack",0],
+  "ar":["[0-9]+ to Attack",0]
+ },
+ "ABSORB":{
+  "fa_percent":["Fire Absorb .[0-9]+%",0],
+  "fa":["[0-9]+ Fire Absorb",0],
+  "fa_clvl":["[0-9]+ Absorbs Fire",0],
+  "la_percent":["Lightning Absorb .[0-9]+%",0],
+  "la":["[0-9]+ Lightning Absorb",0],
+  "la_clvl":["[0-9]+ Absorbs Lightning",0],
+  "ca_percent":["Cold Absorb .[0-9]+%",0],
+  "ca":["[0-9]+ Cold Absorb",0],
+  "ca_clvl":["[0-9]+ Absorbs Cold",0],
+  "ma":["[0-9]+ Magic Absorb",0]
+ },
+ "ATTRIBUTES":{
+  "all_attr":["All",0]
+ },
+ "GOLD":{
+  "gold":["Extra",0]
+ },
+ "REP":{
+  "repair":["(durabil|quant)ity",-1]
+ },
+ "VITALITY":{
+  "vit":["To Vit",0]
+ },
+ "REQUIRE":{
+  "req":["Requirements -[0-9]+",0],
+  "req_lvl":["Required Level", 0]
+ },
+ "UNIDENTIFIED":{
+  "no_id":[".",-1]
+ },
+ "TO":{
+  "oskill_ga":["Guided Arrow", 0]
+ }
+}

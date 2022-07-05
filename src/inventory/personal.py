@@ -7,6 +7,7 @@ from screen import grab, convert_screen_to_monitor
 import keyboard
 import cv2
 import time
+import re
 import numpy as np
 from dataclasses import dataclass
 
@@ -19,6 +20,7 @@ from ui import view
 from ui_manager import detect_screen_object, is_visible, select_screen_object_match, wait_until_visible, ScreenObjects, center_mouse, wait_for_update
 from item import ItemCropper
 from messages import Messenger
+import property_parser
 
 inv_gold_full = False
 messenger = Messenger()
@@ -270,6 +272,28 @@ def open(img: np.ndarray = None) -> np.ndarray:
         img = grab()
     return img
 
+def get_item_name_from_ocr_result(ocr_lines: list[str], color: str) -> str:
+    if color in ["yellow","green","gold"]:
+        if len(ocr_lines) > 1 and ocr_lines[1] in Config().items_new[color]:
+            return ocr_lines[1]
+    elif color in ["white","gray"]:
+        if ocr_lines[0].startswith("SUPERIOR"):
+            return ocr_lines[0][len("SUPERIOR")+1:]
+    elif color == "blue":
+        magic_dict = Config().items_new["blue"]
+        if not ocr_lines[0] in magic_dict:
+            # name with prefix and suffix
+            of_index = ocr_lines[0].find(" OF ")
+            if of_index > 0:
+                words = ocr_lines[0][:of_index].split()
+            else:
+                words = ocr_lines[0].split()
+            for i in range(len(words)):
+                name = ' '.join(words[i:])
+                if name in magic_dict:
+                    return name
+    return ocr_lines[0]
+
 def inspect_items(inp_img: np.ndarray = None, close_window: bool = True, game_stats: GameStats = None, ignore_sell: bool = False) -> list[BoxInfo]:
     """
     Iterate over all picked items in inventory--ID items and decide which to stash
@@ -295,7 +319,7 @@ def inspect_items(inp_img: np.ndarray = None, close_window: bool = True, game_st
         x_m, y_m = convert_screen_to_monitor(slot[0])
         delay = [0.2, 0.3] if count else [1, 1.3]
         mouse.move(x_m, y_m, randomize = 10, delay_factor = delay)
-        wait(0.1, 0.2)
+        time.sleep(0.1)
         hovered_item = grab()
         # get the item description box
         item_box = ItemCropper().crop_item_descr(hovered_item)
@@ -318,34 +342,33 @@ def inspect_items(inp_img: np.ndarray = None, close_window: bool = True, game_st
                 if cnt >= 2:
                     Logger.error(f"inspect_items: Unable to get item's inventory ROI, slot {slot[0]}")
                     break
-            item_name = item_box.ocr_result.text.splitlines()[0] if not vendor_open else item_box.ocr_result.text.splitlines()[1]
             extend_roi = item_box.roi[:]
             extend_roi[3] = extend_roi[3] + 30
             item_roi = common.calc_item_roi(mask_by_roi(pre, extend_roi, type = "inverse"), mask_by_roi(post, extend_roi, type = "inverse"))
             if item_roi:
                 item_rois.append(item_roi)
+
+            ocr_lines = list(filter(None, re.split(' *[,\n] *', item_box.ocr_result.text)))
+            if vendor_open:
+                ocr_lines = ocr_lines[1:]
+            item_name = get_item_name_from_ocr_result(ocr_lines, item_box.color)
             # determine whether the item can be sold
             item_can_be_traded = not any(substring in item_name for substring in nontradable_items)
             sell = Config().char["sell_junk"] and item_can_be_traded
-            # check and see if item exists in pickit
-            try:
-                found_item = item_finder.search(item_box.data)[0]
-            except:
-                Logger.debug(f"inspect_items: item_finder returned None or error for {item_name}, likely an accidental pick")
-                Logger.debug(f"Dropping {item_name}")
-                found_item = False
             # attempt to identify item
             need_id = False
-            if Config().char["id_items"] and found_item:
-                # if this item has no include or exclude properties, leave it unidentified
-                implied_no_id = not (Config().items[found_item.name].include or Config().items[found_item.name].exclude)
-                implied_no_id |= not any(item_type in found_item.name for item_type in ["uniq", "magic", "rare", "set"])
-                if not implied_no_id:
-                    if (is_unidentified := is_visible(ScreenObjects.Unidentified, item_box.data)):
+            if Config().char["id_items"]:
+                if item_box.color in ["yellow","green","gold","blue"]:
+                    if any("UNIDENTIFIED" in line for line in ocr_lines):
                         need_id = True
-                        center_mouse()
-                        tome_state, tome_pos = common.tome_state(grab(), tome_type = "id", roi = Config().ui_roi["restricted_inventory_area"])
-                    if is_unidentified and tome_state is not None and tome_state == "ok":
+                        if item_name in Config().items_new[item_box.color]:
+                            item = Config().items_new[item_box.color][item_name]
+                            if item.expression is None:
+                                need_id = False
+                if need_id:
+                    center_mouse()
+                    tome_state, tome_pos = common.tome_state(grab(), tome_type = "id", roi = Config().ui_roi["restricted_inventory_area"])
+                    if tome_state is not None and tome_state == "ok":
                         common.id_item_with_tome([x_m, y_m], tome_pos)
                         need_id = False
                         # recapture box after ID
@@ -355,9 +378,14 @@ def inspect_items(inp_img: np.ndarray = None, close_window: bool = True, game_st
                         item_box = ItemCropper().crop_item_descr(hovered_item)
 
             if item_box.valid:
-                Logger.debug(f"OCR ITEM DESCR: Mean conf: {item_box.ocr_result.mean_confidence}")
-                for i, line in enumerate(list(filter(None, item_box.ocr_result.text.splitlines()))):
-                    Logger.debug(f"OCR LINE{i}: {line}")
+                Logger.debug(f"OCR ITEM DESCR: Color: {item_box.color}, Mean conf: {item_box.ocr_result.mean_confidence}")
+                ocr_lines = list(filter(None, re.split(' *[,\n] *', item_box.ocr_result.text)))
+                if vendor_open:
+                    ocr_lines = ocr_lines[1:]
+
+                #determine item name
+                item_name = get_item_name_from_ocr_result(ocr_lines, item_box.color)
+
                 if Config().general["loot_screenshots"]:
                     timestamp = time.strftime("%Y%m%d_%H%M%S")
                     found_low_confidence = False
@@ -371,10 +399,31 @@ def inspect_items(inp_img: np.ndarray = None, close_window: bool = True, game_st
                         cv2.imwrite(f"./loot_screenshots/ocr_box_{timestamp}_o.png", item_box.ocr_result['original_img'])
                         cv2.imwrite(f"./loot_screenshots/ocr_box_{timestamp}_n.png", item_box.ocr_result['processed_img'])
 
+                item_prop = property_parser.parse_lines(ocr_lines[1:], True)
+
                 # decide whether to keep item
                 keep = False
                 if not need_id:
-                    keep = keep_item(item_box, found_item) if found_item else False
+                    if item_name in Config().items_new[item_box.color]:
+                        pickit_desc = Config().items_new[item_box.color][item_name]
+                        # evaluate expression
+                        if pickit_desc.expression is None:
+                            if pickit_desc.pickit_type > 0:
+                                keep = True
+                        else:
+                            # assign variables with values
+                            for var, expr in Config().variables_new:
+                                try:
+                                    item_prop[var] = eval(expr, item_prop)
+                                except:
+                                    Logger.error(f"Error assigning variable: {var} = {expr}")
+                            try:
+                                if eval(pickit_desc.expression, item_prop):
+                                    keep = True
+                            except:
+                                Logger.error(f"Error evaluating expr for ({item_name}): {pickit_desc.expression}")
+                                keep = True
+                    Logger.debug(f"OCR NAME: {item_name} -> {'Keep' if keep else 'Discard'}")
                 if keep:
                     sell = need_id = False
                 if ignore_sell:
@@ -397,7 +446,11 @@ def inspect_items(inp_img: np.ndarray = None, close_window: bool = True, game_st
                     continue
                 # if item is to be kept and is already ID'd or doesn't need ID, log and stash
                 if game_stats is not None and (keep and not need_id):
-                    game_stats.log_item_keep(found_item.name, Config().items[found_item.name].pickit_type == 2, item_box.data, item_box.ocr_result.text)
+                    if item_name in Config().items_new[item_box.color] and Config().items_new[item_box.color][item_name].pickit_type == 2:
+                        send_msg = True
+                    else:
+                        send_msg = False
+                    game_stats.log_item_keep(item_name, send_msg, item_box.data, item_box.ocr_result.text)
                 # if item is to be kept or still needs to be sold or identified, append to list
                 if keep or sell or need_id:
                     # save item info

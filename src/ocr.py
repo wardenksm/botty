@@ -169,10 +169,10 @@ class Ocr:
 
         word_count=0
         new_string=""
-        text = text.replace('\n',' NEWLINEHERE ')
-        for word in text.split(' '):
-            word = word.strip()
-            if word and word != "NEWLINEHERE":
+        
+        for line in text.splitlines():
+            words = line.split()
+            for index, word in enumerate(words):
                 try:
                     if confidences[word_count] <= 90:
                         alphanumeric = re.sub(r"[^a-zA-Z0-9]", "", word)
@@ -180,25 +180,17 @@ class Ocr:
                             closest_match, similarity, _ = extractOne(word, word_list, scorer=levenshtein)
                             normalized_similarity = 1 - similarity / len(word)
                             if (normalized_similarity) >= (match_threshold):
-                                new_string += f"{closest_match} "
+                                words[index] = closest_match
                                 Logger.debug(f"check_wordlist: Replacing {word} ({confidences[word_count]}%) with {closest_match}, similarity={normalized_similarity*100:.1f}%")
-                            else:
-                                new_string += f"{word} "
-                        else:
-                            new_string += f"{word} "
-                    else:
-                        new_string += f"{word} "
                     word_count += 1
                 except IndexError:
                     # bizarre word_count index exceeded sometimes... can't reproduce and words otherwise seem to match up
-                    Logger.error(f"check_wordlist: IndexError for word: {word}, index: {word_count}, text: {text}")
-                    return text
+                    Logger.error(f"check_wordlist: IndexError for word: {word}, index: {word_count}, text: {line}")
                 except Exception as e:
-                    Logger.error(f"check_wordlist: Unknown error for word: {word}, index: {word_count}, text: {text}, exception: {e}")
+                    Logger.error(f"check_wordlist: Unknown error for word: {word}, index: {word_count}, text: {line}, exception: {e}")
                     return text
-            elif word == "NEWLINEHERE":
-                new_string += "\n"
-        return new_string.strip()
+            new_string += f"{' '.join(words)}\n"
+        return new_string.strip("\n")
 
     def _fix_regexps(self, ocr_output: str, repeat_count: int = 0) -> str:
         # case: two 1's within a string; e.g., "SIIPER MANA POTION"

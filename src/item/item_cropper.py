@@ -120,16 +120,24 @@ class ItemCropper:
                 #check for orange (like key of destruction, etc.)
                 orange_mask, _ = color_filter(cropped_item, Config().colors["orange"])
                 contains_orange = np.min(orange_mask) > 0
-            expected_height = True if (self._box_expected_height_range[0] < h < self._box_expected_height_range[1]) else False
-            expected_width = True if (self._box_expected_width_range[0] < w < self._box_expected_width_range[1]) else False
+            expected_height = self._box_expected_height_range[0] < h < self._box_expected_height_range[1]
+            expected_width = self._box_expected_width_range[0] < w < self._box_expected_width_range[1]
             box2 = Config().ui_roi[f"{inventory_side}_inventory"]
             overlaps_inventory = False if (x+w<box2[0] or box2[0]+box2[2]<x or y+h+50+10<box2[1] or box2[1]+box2[3]<y) else True # padded height because footer isn't included in contour
             if contains_black and (contains_white or contains_orange) and mostly_dark and expected_height and expected_width and overlaps_inventory:
                 footer_height_max = (720 - (y + h)) if (y + h + 35) > 720 else 35
                 found_footer = template_finder.search(["TO_TOOLTIP"], inp_img, threshold=0.8, roi=[x, y+h, w, footer_height_max]).valid
                 if found_footer:
+                    #determine item color
+                    first_line = cropped_item[2:28]
+                    for key in self._item_colors:
+                        mask, _ = color_filter(first_line, Config().colors[key])
+                        if np.count_nonzero(mask) > 30:
+                            result.color = key
+                            break
+                    else:
+                        result.color = "black"
                     ocr_result = self._ocr.image_to_text(cropped_item, psm=6, model=model)[0]
-                    result.color = "black"
                     result.roi = [x, y, w, h]
                     result.data = cropped_item
                     result.ocr_result = ocr_result

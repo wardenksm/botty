@@ -70,22 +70,22 @@ class PickIt:
             # Check if we need to pick up any consumables
             needs = consumables.get_needs()
             if needs["mana"] <= 0:
-                item_list = [x for x in item_list if "mana_potion" not in x.name]
+                item_list = [x for x in item_list if "MANA POT" not in x.name]
             if needs["health"] <= 0:
-                item_list = [x for x in item_list if "healing_potion" not in x.name]
+                item_list = [x for x in item_list if "HEALING POT" not in x.name]
             if needs["rejuv"] <= 0:
-                item_list = [x for x in item_list if "rejuvenation_potion" not in x.name]
+                item_list = [x for x in item_list if "REJUVENATION POT" not in x.name]
             if needs["tp"] <= 0:
-                item_list = [x for x in item_list if "scroll_tp" not in x.name]
+                item_list = [x for x in item_list if "TOWN PORTAL" not in x.name]
             if needs["id"] <= 0:
-                item_list = [x for x in item_list if "scroll_id" not in x.name]
+                item_list = [x for x in item_list if "IDENTIFY" not in x.name]
             if needs["key"] <= 0:
-                item_list = [x for x in item_list if "misc_key" != x.name]
+                item_list = [x for x in item_list if "KEY" != x.name]
 
             # filter out gold less than desired quantity
             if (min_gold := Config().char['min_gold_to_pick']):
                 for item in item_list[:]:
-                    if "misc_gold" == item.name:
+                    if "GOLD" == item.name:
                         try:
                             ocr_gold = int(parse.search("{:d} GOLD", item.ocr_result.text).fixed[0])
                         except:
@@ -106,7 +106,7 @@ class PickIt:
             else:
                 found_nothing = 0
                 item_list.sort(key=itemgetter('dist'))
-                closest_item = next((obj for obj in item_list if not any(map(obj["name"].__contains__, ["misc_gold", "misc_scroll", "misc_key"]))), None)
+                closest_item = next((obj for obj in item_list if not any(map(obj["name"].__contains__, ["GOLD", "SCROLL", "KEY"])) and not obj.name in skip_items), None)
                 if not closest_item:
                     closest_item = item_list[0]
 
@@ -137,15 +137,12 @@ class PickIt:
                 if not force_move and (closest_item.dist < Config().ui_pos["item_dist"] or force_pick_up):
                     self._last_closest_item = None
                     # no need to stash potions, scrolls, gold, keys
-                    if ("potion" not in closest_item.name) and ("misc_scroll" not in closest_item.name) and ("misc_key" != closest_item.name):
-                        if ("misc_gold" != closest_item.name):
+                    if ("POTION" not in closest_item.name) and ("SCROLL OF" not in closest_item.name) and ("KEY" != closest_item.name):
+                        if ("GOLD" != closest_item.name):
                             found_items = True
-                            if Config().advanced_options["ocr_during_pickit"]:
-                                for item in item_list:
-                                    Logger.debug(f"OCR DROP: Name: {item.ocr_result['text']}, Conf: {item.ocr_result['word_confidences']}")
                     else:
                         # note: key pickup appears to be random between 1 and 5, but set here at minimum of 1 for now
-                        consumables.increment_need(closest_item.name, -1)
+                        consumables.increment_need(closest_item.name.lower(), -1)
 
                     prev_cast_start = char.pick_up_item((x_m, y_m), item_name=closest_item.name, prev_cast_start=prev_cast_start)
                     if not char.capabilities.can_teleport_natively:
