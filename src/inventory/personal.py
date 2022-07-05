@@ -89,7 +89,7 @@ def stash_all_items(items: list = None):
         if not is_visible(ScreenObjects.GoldNone):
             Logger.debug("Stashing gold")
             common.select_tab(min(3, stash.get_curr_stash()["gold"]))
-            wait(0.7, 1)
+            wait(0.2, 0.3)
             stash_full_of_gold = False
             # Try to read gold count with OCR
             try: stash_full_of_gold = common.read_gold(grab(), "stash") == 2500000
