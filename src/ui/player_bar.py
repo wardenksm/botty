@@ -5,6 +5,7 @@ from utils.misc import cut_roi, wait
 from logger import Logger
 from config import Config
 from ocr import Ocr
+import re
 
 def get_experience():
     # mouseover exp bar
@@ -32,15 +33,17 @@ def get_experience():
         word_match_threshold = 0.5
     )[0]
 
-    split_text = ocr_result.text.split(' ')
-
+    text = ocr_result.text.replace(',', '').replace('.', '')
+    numbers = re.findall("[0-9]+", text)
     try:
-        split_text = split_text[split_text.index("EXPERIENCE:"):]
-        current_exp = int(split_text[1].replace(',', '').replace('.', ''))
-        required_exp = int(split_text[3].replace(',', '').replace('.', ''))
+        current_exp = int(numbers[0])
+        required_exp = int(numbers[1])
+        if current_exp >= required_exp:
+            Logger.error(f"EXP OCR Invalid number: {ocr_result.text}")
+            return 0,0
         return current_exp, required_exp
     except Exception as e:
-        Logger.warning(f"EXP OCR Error: {split_text}. Exception: {e}")
+        Logger.warning(f"EXP OCR Error: {ocr_result.text}")
         return 0,0
 
 
