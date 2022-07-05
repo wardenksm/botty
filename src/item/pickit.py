@@ -1,4 +1,4 @@
-import time
+import time, random
 import keyboard
 import cv2
 from operator import itemgetter
@@ -18,7 +18,7 @@ class PickIt:
         self._item_finder = item_finder
         self._last_closest_item: Item = None
 
-    def pick_up_items(self, char: IChar) -> bool:
+    def pick_up_items(self, char: IChar, order = None) -> bool:
         """
         Pick up all items with specified char
         :param char: The character used to pick up the item
@@ -93,6 +93,7 @@ class PickIt:
                         if ocr_gold < min_gold:
                             item_list.remove(item)
 
+            all_item_skipped = False
             if len(item_list) == 0:
                 # if twice no item was found, break
                 found_nothing += 1
@@ -105,10 +106,25 @@ class PickIt:
                     time.sleep(0.2)
             else:
                 found_nothing = 0
-                item_list.sort(key=itemgetter('dist'))
-                closest_item = next((obj for obj in item_list if not any(map(obj["name"].__contains__, ["GOLD", "SCROLL", "KEY"])) and not obj.name in skip_items), None)
+                if order == 'bottom-to-top':
+                    item_list.sort(key=lambda x:x.center[0] - x.center[1] * 1.732)
+                elif order == 'top-to-bottom':
+                    item_list.sort(key=lambda x:x.center[1] * 1.732 - x.center[0])
+                else: # nearest first
+                    item_list.sort(key=itemgetter('dist'))
+                if order is None:
+                    closest_item = next((obj for obj in item_list if not any(map(obj["name"].__contains__, ["GOLD", "SCROLL", "KEY"])) and not obj.name in skip_items), None)
+                else:
+                    closest_item = next((obj for obj in item_list if not obj.name in skip_items), None)
                 if not closest_item:
-                    closest_item = item_list[0]
+                    if len(skip_items) > 0:
+                        Logger.warning(f"All items skipped. Randomly pick one")
+                        all_item_skipped = True
+                        closest_item = item_list[random.randrange(len(item_list))]
+                        skip_items = []
+                        curr_item_to_pick = None
+                    else:
+                        closest_item = item_list[0]
 
                 # check if we trying to pickup the same item for a longer period of time
                 force_move = False
@@ -159,10 +175,14 @@ class PickIt:
                             Logger.info(f"Picking up: {closest_item.name} ({closest_item.score*100:.1f}% confidence)")
                         picked_up_items.append(closest_item.name)
                 else:
-                    char.pre_move()
-                    char.move((x_m, y_m), force_move=True)
+                    if all_item_skipped and char.capabilities.can_teleport_with_charges:
+                        char.select_tp()
+                        Logger.info("Force teleport to item")
+                    else:
+                        char.pre_move()
+                    char.move((x_m, y_m), force_move=True, force_tp=all_item_skipped)
                     if not char.capabilities.can_teleport_natively:
-                        time.sleep(0.3)
+                        time.sleep(0.25)
                     time.sleep(0.1)
                     # save closeset item for next time to check potential endless loops of not reaching it or of telekinsis/teleport
                     self._last_closest_item = closest_item
