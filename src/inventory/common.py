@@ -49,13 +49,11 @@ def slot_has_item(slot_img: np.ndarray) -> bool:
     return avg_brightness > 16.0
 
 def close(img: np.ndarray = None) -> np.ndarray:
-    img = grab() if img is None else img
-    if is_visible(ScreenObjects.RightPanel, img) or is_visible(ScreenObjects.LeftPanel, img):
-        keyboard.send("esc")
-        if not wait_until_hidden(ScreenObjects.RightPanel, 1) and not wait_until_hidden(ScreenObjects.LeftPanel, 1):
-            success = view.return_to_play()
-            if not success:
-                return None
+    keyboard.send(Config().char["clear_screen"])
+    if not wait_until_hidden(ScreenObjects.RightPanel, 1) and not wait_until_hidden(ScreenObjects.LeftPanel, 1):
+        success = view.return_to_play()
+        if not success:
+            return None
     return img
 
 def calc_item_roi(img_pre, img_post):
