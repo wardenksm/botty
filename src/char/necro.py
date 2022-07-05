@@ -17,8 +17,7 @@ from ui_manager import wait_until_visible, ScreenObjects, get_closest_non_hud_pi
 
 class Necro(IChar):
     def __init__(self, skill_hotkeys: dict, pather: Pather):
-        os.system('color')
-        Logger.info("\033[94m<<Setting up Necro>>\033[0m")
+        Logger.info("<<Setting up Necro>>")
         super().__init__(skill_hotkeys)
         self._pather = pather
         #custom necro pathing for pindle
@@ -62,7 +61,7 @@ class Necro(IChar):
         )
         if template_match.valid:
             self._shenk_dead=1
-            Logger.info('\33[31m'+"Shenks Dead, looting..."+'\033[0m')
+            Logger.info("Shenks Dead, looting...")
         else:
             return True
 
@@ -148,10 +147,10 @@ class Necro(IChar):
         self._count_gol()
     def _summon_stat(self):
         ''' print counts for summons '''
-        Logger.info('\33[31m'+"Summon status | "+str(self._skeletons_count)+"skele | "+str(self._revive_count)+" rev | "+self._golem_count+" |"+'\033[0m')
+        Logger.info("Summon status | "+str(self._skeletons_count)+"skele | "+str(self._revive_count)+" rev | "+self._golem_count+" |")
 
     def _revive(self, cast_pos_abs: tuple[float, float], spray: int = 10, cast_count: int=12):
-        Logger.info('\033[94m'+"raise revive"+'\033[0m')
+        Logger.info("raise revive")
         keyboard.send(Config().char["stand_still"], do_release=False)
         for _ in range(cast_count):
             if self._skill_hotkeys["raise_revive"]:
@@ -180,7 +179,7 @@ class Necro(IChar):
         keyboard.send(Config().char["stand_still"], do_press=False)
 
     def _raise_skeleton(self, cast_pos_abs: tuple[float, float], spray: int = 10, cast_count: int=16):
-        Logger.info('\033[94m'+"raise skeleton"+'\033[0m')
+        Logger.info("raise skeleton")
         keyboard.send(Config().char["stand_still"], do_release=False)
         for _ in range(cast_count):
             if self._skill_hotkeys["raise_skeleton"]:
@@ -209,7 +208,7 @@ class Necro(IChar):
         keyboard.send(Config().char["stand_still"], do_press=False)
 
     def _raise_mage(self, cast_pos_abs: tuple[float, float], spray: int = 10, cast_count: int=16):
-        Logger.info('\033[94m'+"raise mage"+'\033[0m')
+        Logger.info("raise mage")
         keyboard.send(Config().char["stand_still"], do_release=False)
         for _ in range(cast_count):
             if self._skill_hotkeys["raise_mage"]:
@@ -249,14 +248,14 @@ class Necro(IChar):
 
 
     def _heart_of_wolverine(self):
-        Logger.info('\033[94m'+"buff ~> heart_of_wolverine"+'\033[0m')
+        Logger.info("buff ~> heart_of_wolverine")
         keyboard.send(self._skill_hotkeys["heart_of_wolverine"])
         wait(0.05, 0.2)
         mouse.click(button="right")
         wait(self._cast_duration)
 
     def _clay_golem(self):
-        Logger.info('\033[94m'+"cast ~> clay golem"+'\033[0m')
+        Logger.info("cast ~> clay golem")
         keyboard.send(self._skill_hotkeys["clay_golem"])
         wait(0.05, 0.2)
         mouse.click(button="right")
@@ -328,7 +327,7 @@ class Necro(IChar):
 
     def _corpse_explosion(self, cast_pos_abs: tuple[float, float], spray: int = 10,cast_count: int = 8):
         keyboard.send(Config().char["stand_still"], do_release=False)
-        Logger.info('\033[93m'+"corpse explosion~> random cast"+'\033[0m')
+        Logger.info("corpse explosion~> random cast")
         for _ in range(cast_count):
             if self._skill_hotkeys["corpse_explosion"]:
                 keyboard.send(self._skill_hotkeys["corpse_explosion"])
@@ -342,7 +341,7 @@ class Necro(IChar):
         keyboard.send(Config().char["stand_still"], do_press=False)
 
     def _cast_circle(self, cast_dir: tuple[float,float],cast_start_angle: float=0.0, cast_end_angle: float=90.0,cast_div: int = 10,cast_v_div: int=4,cast_spell: str='raise_skeleton',delay: float=1.0,offset: float=1.0):
-        Logger.info('\033[93m'+"circle cast ~>"+cast_spell+'\033[0m')
+        Logger.info("circle cast ~>"+cast_spell)
         keyboard.send(Config().char["stand_still"], do_release=False)
         keyboard.send(self._skill_hotkeys[cast_spell])
         mouse.press(button="right")
@@ -385,7 +384,7 @@ class Necro(IChar):
         pindle_pack_kill = bool(int(self._skill_hotkeys["clear_pindle_pack"]))
 
         if(pindle_pack_kill):
-            Logger.info('\033[93m'+"optional pindle pack"+'\033[0m')
+            Logger.info("optional pindle pack")
             self._cast_circle(cast_dir=[-1,1],cast_start_angle=0,cast_end_angle=360,cast_div=12,cast_v_div=2,cast_spell='corpse_explosion',delay=3.0,offset=1.8)
             wait(self._cast_duration, self._cast_duration +.2)
             self._cast_circle(cast_dir=[-1,1],cast_start_angle=0,cast_end_angle=360,cast_div=12,cast_v_div=2,cast_spell='corpse_explosion',delay=3.0,offset=1.8)
@@ -418,7 +417,7 @@ class Necro(IChar):
         self._summon_count()
 
         for _ in range(atk_len):
-            Logger.info('\033[96m'+ "pindle atk cycle" + '\033[0m')
+            Logger.info("pindle atk cycle")
             self._amp_dmg(cast_pos_abs, 11)
             self._left_attack_single(cast_pos_abs, 11, cast_count=8)
             rot_deg=0
@@ -448,7 +447,7 @@ class Necro(IChar):
         self._revive(cast_pos_abs,50,cast_count=4)
         self._summon_stat()
 
-        Logger.info('\033[92m'+"atk cycle end"+'\033[0m')
+        Logger.info("atk cycle end")
         #wait for pindle to die just incase - maybe needs death detection
         wait(self._cast_duration, self._cast_duration + 0.4)
         if self.capabilities.can_teleport_natively:
@@ -476,10 +475,10 @@ class Necro(IChar):
 
         for _ in range(atk_len):
             #Logger.info("atk cycle")
-            Logger.info('\033[96m'+ "eldrich atk cycle" + '\033[0m')
+            Logger.info("eldrich atk cycle")
             self._left_attack_single(cast_pos_abs, 11, cast_count=8)
             self._corpse_explosion(cast_pos_abs, 60, cast_count=4)
-        Logger.info('\033[92m'+"atk cycle end"+'\033[0m')
+        Logger.info("atk cycle end")
 
         # Move to items
         wait(self._cast_duration, self._cast_duration + 0.2)
@@ -519,7 +518,7 @@ class Necro(IChar):
 
     def kill_shenk(self) -> bool:
         #stop to kill potentially troublesome packs
-        Logger.info('\033[93m'+"dealing with posible packs"+'\033[0m')
+        Logger.info("dealing with posible packs")
 
         self.bone_armor()
         self._cast_circle(cast_dir=[-1,1],cast_start_angle=0,cast_end_angle=360,cast_div=4,cast_v_div=3,cast_spell='amp_dmg',delay=3.0)
@@ -539,7 +538,7 @@ class Necro(IChar):
         corpse_exp_pos = [200,80]
 
         for _ in range(int(Config().char["atk_len_shenk"])):
-            Logger.info('\033[96m'+ "shenk atk cycle" + '\033[0m')
+            Logger.info("shenk atk cycle")
             self._check_shenk_death()
             if(self._shenk_dead):
                 break
@@ -557,7 +556,7 @@ class Necro(IChar):
             self._check_shenk_death()
             if(self._shenk_dead):
                 break
-        Logger.info('\033[92m'+"atk cycle end"+'\033[0m')
+        Logger.info("atk cycle end")
 
         # Move to items
         #wait(self._cast_duration, self._cast_duration + 0.2)
@@ -851,7 +850,7 @@ class Necro(IChar):
 
 
         #self._pather.traverse_nodes([230, 229 ,228], self, timeout=2.5, force_tp=True)
-        Logger.info('\033[92m'+"atk cycle end"+'\033[0m')
+        Logger.info("atk cycle end")
 
 
         return True
