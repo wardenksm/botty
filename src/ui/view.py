@@ -36,16 +36,21 @@ def save_and_exit() -> bool:
     Performes save and exit action from within game
     :return: Bool if action was successful
     """
-    attempts = 1
+    attempts = 0
     success = False
+    x_m, y_m = convert_screen_to_monitor((640, 315))
     while attempts < 2 and not success:
         # if exit button isn't detected already, press escape
-        while not (highlight := detect_screen_object(ScreenObjects.GameMenu)).valid:
-            keyboard.send("esc")
+        if not detect_screen_object(ScreenObjects.GameMenu).valid:
+            keyboard.send(f"{Config().char['clear_screen']}+esc")
+            mouse.move(x_m, y_m, is_async=True, delay_factor=[0.02, 0.05])
             time.sleep(0.1)
-        keyboard.send("up,up,down+enter")
+            mouse.sync()
+        else:
+            mouse.move(x_m, y_m, delay_factor=[0.02, 0.05])
+        mouse.click("left")
         # if center icon on player bar disappears then save/exit was successful
-        if not (success := wait_until_hidden(ScreenObjects.InGame, 3)):
+        if not (success := wait_until_hidden(ScreenObjects.InGame, 2)):
             Logger.debug("Failed to find or click save/exit button")
         attempts += 1
     return success
