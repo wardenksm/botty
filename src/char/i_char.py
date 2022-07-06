@@ -1,5 +1,5 @@
 from typing import Callable
-import random
+from dataclasses import dataclass
 import time
 import cv2
 import math
@@ -18,6 +18,40 @@ import template_finder
 from ui_manager import detect_screen_object, ScreenObjects, get_closest_non_hud_pixel
 from inventory import belt
 
+@dataclass
+class MonsterInfo:
+    range: np.ndarray
+    roi: list[int]
+    name_bar: list[str]
+    hp_width: int
+    color_check: Callable
+
+monster_info = {
+    "pindle": MonsterInfo(
+        range = np.array([[86,34,32],[98,63,156]]),
+        roi = Config().ui_roi["pindle_fight"],
+        name_bar = ["PINDLE_BAR_1", "PINDLE_BAR_2"],
+        hp_width = 62,
+        color_check = lambda mean: mean[2] > mean[0] * 1.05
+    ),
+    "eldritch": MonsterInfo(
+        range = np.array([[78,24,63],[93,59,199]]),
+        roi = Config().ui_roi["eldritch"],
+        name_bar = ["ELDRITCH_BAR_1", "ELDRITCH_BAR_2", "ELDRITCH_BAR_3"],
+        hp_width = 120,
+        color_check = None
+    ),
+    "nihlathak": MonsterInfo(
+        range = None,
+        roi = None,
+        name_bar = ["NIHL_BAR_1"],
+        hp_width = 0,
+        color_check = None
+    )
+}
+
+fe_range = np.array([[7,164,104],[15,202,129]])
+
 class IChar:
     _CrossGameCapabilities: None | CharacterCapabilities = None
 
@@ -27,6 +61,21 @@ class IChar:
         # Add a bit to be on the save side
         self._cast_duration = Config().char["casting_frames"] * 0.04 + 0.01
         self.damage_scaling = float(Config().char.get("damage_scaling", 1.0))
+        self._fe_explosin_cnt = 0
+        self._found_monster_bar = False
+        self._monster_gone_cnt = 0
+        self._name_bar_gone_cnt = 0
+        self._immunities = None
+        self._immunity_dict = dict({
+            "l": Config().colors["yellow"],
+            "f": Config().colors["red"],
+            "c": Config().colors["blue"],
+            "p": Config().colors["green"]
+        })
+        self._monster_hp = 1.0
+        self._summon_roi = [14,20,116,40]
+        self._enemy_info_roi = Config().ui_roi["enemy_info"]
+    
         self.capabilities = None
         self._active_skill = {
             "left": "",
@@ -77,6 +126,88 @@ class IChar:
                 can_teleport_natively="can_teleport_natively" in override,
                 can_teleport_with_charges="can_teleport_with_charges" in override
             )
+
+    def find_immune(self, img) -> str:
+        immunity = ''
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        for i in self._immunity_dict:
+            lower = self._immunity_dict[i][0]
+            higher = self._immunity_dict[i][1]
+            mask = cv2.inRange(hsv, lower, higher)
+            if cv2.countNonZero(mask) > 160:
+                immunity += i
+        return immunity
+
+    def check_monster_hp(self, img) -> float:
+        red_blue = np.int16(img[:,:,2]) - np.int16(img[:,:,0])
+        _, mask = cv2.threshold(red_blue, 50, 255, cv2.THRESH_BINARY)
+        return cv2.countNonZero(mask) / mask.size
+
+    def find_monster_pos(self, img, name:str):
+        monster = monster_info[name]
+        bgr = cut_roi(img, monster.roi)
+        hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+        #check FE explosion of pindleskin death
+        mask = cv2.inRange(hsv, fe_range[0], fe_range[1])
+        kernel = np.ones((2, 2), 'uint8')
+        mask = cv2.erode(mask, kernel, None, iterations=1)
+        cnt = cv2.countNonZero(mask)
+        if cnt > 300:
+            #Logger.info(f"Found FE explosion! {cnt}")
+            self._fe_explosin_cnt += 1
+
+        #check monster
+        mask = cv2.inRange(hsv, monster.range[0], monster.range[1])
+        kernel = np.ones((2, 1), 'uint8')
+        mask = cv2.erode(mask, kernel, None, iterations=1)
+        if cv2.countNonZero(mask) < 4:
+            self._monster_gone_cnt += 1
+            return None
+        dist = cv2.distanceTransform(~mask, cv2.DIST_L1, cv2.DIST_MASK_3)
+        k = 30
+        bw = np.uint8(dist < k)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+        bw2 = cv2.morphologyEx(bw, cv2.MORPH_ERODE, kernel)
+        contours, _ = cv2.findContours(bw2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        max_area = 10
+        largest_contour = -1
+        for i,c in enumerate(contours):
+            area = cv2.contourArea(c)
+            if area > max_area:
+                if monster.color_check is not None:
+                    contour_mask = np.zeros(bgr.shape, np.uint8)
+                    cv2.drawContours(contour_mask, contours, i, (255,255,255), -1)
+                    mean = cv2.mean(bgr, contour_mask[:,:,0])
+                    if not monster.color_check(mean):
+                        continue
+                max_area = area
+                largest_contour = i
+        if largest_contour < 0:
+            return None
+        m = cv2.moments(contours[largest_contour])
+        x = round(m['m10']/m['m00']) + monster.roi[0]
+        y = round(m['m01']/m['m00']) + monster.roi[1] - 5
+        self._monster_gone_cnt = 0
+        return x, 0 if y < 0 else y
+
+    def find_name_bar(self, img, name:str) -> bool:
+        monster = monster_info[name]
+        x,y,w,h = self._enemy_info_roi
+        name_img = img[y:y+h,x:x+w]
+        if template_finder.search(monster.name_bar, name_img, threshold=0.75).valid:
+            if monster.hp_width:
+                hp_img = cv2.addWeighted(img[20:23, 640-monster.hp_width:640+monster.hp_width], 0.5,
+                                         img[23:26, 640-monster.hp_width:640+monster.hp_width], 0.5, 0)
+                self._monster_hp = self.check_monster_hp(hp_img)
+                percent = round(self._monster_hp*100)
+            self._immunities = self.find_immune(name_img[50:350,50:])
+            self._found_monster_bar = True
+            #Logger.info(f"Found name bar! Immunity: {self._immunities}")
+            self._monster_gone_cnt = 0
+            self._name_bar_gone_cnt = 0
+            self._fe_explosin_cnt = 0
+            return True
+        return False
 
     def discover_capabilities(self, force = False):
         if IChar._CrossGameCapabilities is None or force:
