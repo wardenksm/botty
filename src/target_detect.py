@@ -38,7 +38,8 @@ def get_visible_targets(
     radius_min: int = 150,
     radius_max: int = 1280,
     ignore_roi: list[int] = [600, 300, (1280/2 - 600)*2, (720/2 - 300)*2],
-    use_radius: bool = False
+    use_radius: bool = False,
+    custom_filters: list = None
 ) -> list[TargetInfo]:
     """
     :param img: The image to find targets in
@@ -50,8 +51,10 @@ def get_visible_targets(
     """
     img = grab() if img is None else img
     targets = []
-    for filter in FILTER_RANGES:
-        filterimage, threshz = _process_image(img, mask_char=True, mask_hud=True, **filter) # HSV Filter for BLUE and GREEN (Posison Nova & Holy Freeze)
+    if custom_filters is None:
+        custom_filters = FILTER_RANGES
+    for filter in custom_filters:
+        filterimage, threshz = _process_image(img, mask_char=True, mask_hud=True, **filter) # HSV Filter for BLUE and GREEN (Poison Nova & Holy Freeze)
         filterimage, rectangles, positions = _add_markers(filterimage, threshz, rect_min_size=100, rect_max_size=200, marker=True) # rather large rectangles
         if positions:
             for cnt, position in enumerate(positions):
