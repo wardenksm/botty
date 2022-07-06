@@ -1,13 +1,12 @@
 import keyboard
 import random
-import time
+import time, math
+import cv2
 
 from char import CharacterCapabilities
 from char.paladin import Paladin
 from config import Config
 from logger import Logger
-from pather import Location
-from pather import Pather
 from pather import Pather, Location
 from screen import convert_abs_to_monitor, convert_screen_to_abs, grab
 from target_detect import get_visible_targets, log_targets
@@ -25,6 +24,13 @@ class Hammerdin(Paladin):
         #hammerdin needs to be closer to shenk to reach it with hammers
         self._pather.offset_node(149, (70, 10)) # THIS NODE NODE LONGER EXISTS FOR AUTMAP CHARS
         self._pather.offset_node(1149, (70, 10)) # not sure this node has to be offset for automap, keeping it to be safe
+        self._pather.offset_node(122, (-50, 150))
+        self._pather.offset_node(188, (-100, 100))
+        #custom color filter for travincil
+        self._trav_filters = [
+            {"erode": 1, "blur": 3, "lh": 0, "ls": 0, "lv": 200, "uh": 0, "us": 255, "uv": 255}, # council's red lightning
+            {"erode": 0, "blur": 3, "lh": 100, "ls": 75, "lv": 80, "uh": 120, "us": 100, "uv": 255} # decrepify
+        ]
 
     def _cast_hammers(self, time_in_s: float, aura: str = "concentration"):
         if aura in self._skill_hotkeys and self._skill_hotkeys[aura]:
@@ -39,9 +45,9 @@ class Hammerdin(Paladin):
             while (time.time() - start) < time_in_s:
                 wait(0.06, 0.08)
                 mouse.press(button="left")
-                wait(0.1, 0.2)
+                wait(0.15, 0.2)
                 mouse.release(button="left")
-            wait(0.01, 0.05)
+            wait(0.01, 0.03)
             keyboard.send(Config().char["stand_still"], do_press=False)
 
     def pre_buff(self):
@@ -241,10 +247,7 @@ class Hammerdin(Paladin):
             # Custom eld position for teleport that brings us closer to eld
             self._pather.traverse_nodes_fixed([(675, 30)], self)
         else:
-            keyboard.send(self._skill_hotkeys["concentration"])
-            wait(0.15)
-            # Traverse without pre_move, because we don't want to activate vigor when walking!
-            self._pather.traverse_nodes((Location.A5_ELDRITCH_SAFE_DIST, Location.A5_ELDRITCH_END), self, timeout=1.0, do_pre_move=False, force_tp=True, use_tp_charge=True)
+            self._charge_to(convert_screen_to_abs((675, 150)))
         wait(0.05, 0.1)
         self._cast_hammers(Config().char["atk_len_eldritch"])
         wait(0.1, 0.15)
@@ -266,21 +269,65 @@ class Hammerdin(Paladin):
         wait(.15)
         # Check out the node screenshot in assets/templates/trav/nodes to see where each node is at
         atk_len = Config().char["atk_len_trav"]
-        # Go inside and hammer a bit
-        self._pather.traverse_nodes([228, 229], self, timeout=2.2, do_pre_move=False, force_tp=True, use_tp_charge=True)
-        # Move a bit back and another round
-        self._move_and_attack((40, 20), atk_len)
-        # Here we have two different attack sequences depending if tele is available or not
+        self._cast_hammers(atk_len)
         if self.capabilities.can_teleport_natively or self.capabilities.can_teleport_with_charges:
-            # Back to center stairs and more hammers
-            self._pather.traverse_nodes([226], self, timeout=2.2, do_pre_move=False, force_tp=True, use_tp_charge=True)
+            self._pather.traverse_nodes_automap([1229], self, timeout=2.5, force_tp=True)
+            self._cast_hammers(atk_len)
+            # Move a bit back and another round
+            self._move_and_attack((40, 20), atk_len)
+            img = grab()
+            targets = get_visible_targets(img, radius_min=300) + get_visible_targets(img, radius_min=300, custom_filters=self._trav_filters)
+            Logger.info(f"Detected {len(targets)} targets in temple")
+            for t in targets:
+                # check targets in valid area
+                angle = math.atan2(*t.center_abs)
+                if math.pi*-0.51 > angle > math.pi*-0.8:
+                    self._pather.traverse_nodes_automap([1230], self, timeout=1.0, force_tp=True)
+                    self._cast_hammers(atk_len)
+                    img = cv2.rectangle(img.copy(), t.roi[:2], (t.roi[0]+t.roi[2], t.roi[1]+t.roi[3]), (255,200,0), 1)
+                    wait(0.3, 0.4)
+                    self._pather.traverse_nodes_automap([1227], self, timeout=1.0, force_tp=True)
+                    self._cast_hammers(atk_len * 0.5)
+                    wait(0.08, 0.1)
+                    if self.capabilities.can_teleport_with_charges:
+                        self._charge_to((250,115))
+                    else:
+                        self._pather.traverse_nodes_automap([1226], self, timeout=2.5, force_tp=True)
+                    break
+            else:
+                # Back to center stairs and more hammers
+                self._pather.traverse_nodes_automap([1226], self, timeout=2.5, force_tp=True)
             self._cast_hammers(atk_len)
             # move a bit to the top
-            self._move_and_attack((65, -30), atk_len)
+            self._move_and_attack((65, -30), atk_len * 0.5)
         else:
+            if not self._pather.traverse_nodes([227], self, timeout=2.0, do_pre_move=False):
+                wait(0.12, 0.15)
+                self._charge_to((-250,-115))
+            self._cast_hammers(atk_len)
+            if not self._pather.traverse_nodes([226], self, timeout=2.0, do_pre_move=False):
+                wait(0.12, 0.15)
+                self._charge_to((250,115))
+                self._pather.traverse_nodes([226], self, timeout=1.5, do_pre_move=False)
+            #mouse.move(*entry_pos)
+            # Go inside and hammer a bit
+            wait(0.12, 0.15)
+            self._charge_to(convert_screen_to_abs((860,175)))
+            self._cast_hammers(1)
+            for _ in range(4):
+                if self._pather.traverse_nodes([229], self, timeout=2.5, do_pre_move=False):
+                    break
+                # blocked by council
+                self._move_and_attack((-58, 100), atk_len)
+                # Move a bit back and another round
+            self._cast_hammers(atk_len)
+            self._pather.traverse_nodes([230], self, timeout=2.0, do_pre_move=False)
+            self._cast_hammers(atk_len)
             # Stay inside and cast hammers again moving forward
-            self._move_and_attack((40, 10), atk_len)
-            self._move_and_attack((-40, -20), atk_len)
+            self._move_and_attack((-87, 150), atk_len * 0.5)
+            # Back to center stairs
+            self._pather.traverse_nodes([229, 226], self, timeout=3.0)
+            self._cast_hammers(atk_len * 0.5)
         self._cast_hammers(1.6, "redemption")
         return True
 
