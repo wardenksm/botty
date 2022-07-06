@@ -90,6 +90,21 @@ class Paladin(IChar):
         # release stand still key
         keyboard.send(Config().char["stand_still"], do_press=False)
 
+    def _charge_to(self, pos: tuple[float, float]):
+        if self._skill_hotkeys["charge"]:
+            Logger.debug(f"Charge to {pos}")
+            self._select_skill("vigor", "right")
+            keyboard.send(self._skill_hotkeys["charge"])
+            self._set_active_skill("left", "charge")
+            pos_m = convert_abs_to_monitor(pos)
+            mouse.move(*pos_m)
+            keyboard.press(Config().char["stand_still"])
+            wait(0.05,0.07)
+            mouse.press("left")
+            wait(0.12,0.15)
+            mouse.release("left")
+            keyboard.release(Config().char["stand_still"])
+
     def _activate_redemption_aura(self, delay = [0.6, 0.8]):
         self._select_skill("redemption", delay=delay)
 
