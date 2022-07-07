@@ -1,6 +1,6 @@
 from typing import Callable
 from dataclasses import dataclass
-import time, math
+import random, time, math
 import cv2
 import health_manager
 from inventory import consumables, personal, common, belt
@@ -345,11 +345,9 @@ class IChar:
             else:
                 mouse.click(button="left")
 
-    def walk(self, pos_monitor: tuple[float, float], force_tp: bool = False, force_move: bool = False):
+    def walk(self, pos_abs: tuple[float, float], force_tp: bool = False, force_move: bool = False):
         factor = Config().advanced_options["pathing_delay_factor"]
-            # in case we want to walk we actually want to move a bit before the point cause d2r will always "overwalk"
-        pos_screen = convert_monitor_to_screen(pos_monitor)
-        pos_abs = convert_screen_to_abs(pos_screen)
+        # in case we want to walk we actually want to move a bit before the point cause d2r will always "overwalk"
         dist = math.dist(pos_abs, (0, 0))
         min_wd = max(10, Config().ui_pos["min_walk_dist"])
         max_wd = random.randint(int(Config().ui_pos["max_walk_dist"] * 0.65), Config().ui_pos["max_walk_dist"])
@@ -495,37 +493,38 @@ class IChar:
         circle_pos_screen = self._pather._adjust_abs_range_to_screen(target)
         return convert_abs_to_monitor(circle_pos_screen)
 
-    def _lerp(self,a: float,b: float, f:float):
+    @staticmethod
+    def _lerp(a: float, b: float, f:float):
         return a + f * (b - a)
 
-    def cast_in_arc(self, ability: str, cast_pos_abs: tuple[float, float] = [0,-100], time_in_s: float = 3, spread_deg: float = 10, hold=True):
+    def cast_in_arc(self, ability: str, cast_pos_abs: tuple[float, float] = [0,-100], time_in_s: float = 3, spread_deg: float = 10, hold=True, btn="right"):
         #scale cast time by damage_scaling
         time_in_s *= self.damage_scaling
         Logger.debug(f'Casting {ability} for {time_in_s:.02f}s at {cast_pos_abs} with {spread_deg}°')
-        if not self._skill_hotkeys[ability]:
+        if self._skill_hotkeys[ability]:
+            self._select_skill(skill = ability, mouse_click_type=btn, delay=0.02)
+        elif btn == "right":
             raise ValueError(f"You did not set {ability} hotkey!")
         keyboard.send(Config().char["stand_still"], do_release=False)
-        self._select_skill(skill = ability, mouse_click_type="right", delay=(0.02, 0.08))
 
         target = self.vec_to_monitor(arc_spread(cast_pos_abs, spread_deg=spread_deg))
         mouse.move(*target,delay_factor=[0.95, 1.05])
         if hold:
-            mouse.press(button="right")
+            mouse.press(button=btn)
         start = time.time()
         while (time.time() - start) < time_in_s:
             target = self.vec_to_monitor(arc_spread(cast_pos_abs, spread_deg=spread_deg))
             if hold:
                 mouse.move(*target,delay_factor=[3, 8])
-            if not hold:
+            else:
                 mouse.move(*target,delay_factor=[.2, .4])
-                wait(0.02, 0.04)
-                mouse.press(button="right")
-                wait(0.02, 0.06)
-                mouse.release(button="right")
+                #wait(0.02, 0.04)
+                mouse.press(button=btn)
+                #wait(0.02, 0.06)
                 wait(self._cast_duration, self._cast_duration)
-
+                mouse.release(button=btn)
         if hold:
-            mouse.release(button="right")
+            mouse.release(button=btn)
         keyboard.send(Config().char["stand_still"], do_press=False)
 
 
