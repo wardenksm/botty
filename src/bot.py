@@ -126,6 +126,8 @@ class Bot:
         self._ran_no_pickup = False
         self._previous_run_failed = False
         self._timer = time.time()
+        self._run_counter = 0
+        self._pre_buff_every_run = Config().char["pre_buff_every_run"]
 
         # Create State Machine
         self._states=['initialization','hero_selection', 'town', 'pindle', 'shenk', 'trav', 'nihlathak', 'arcane', 'diablo']
@@ -358,7 +360,8 @@ class Bot:
             Logger.info("Stashing items")
             self._curr_loc, result_items = self._town_manager.stash(self._curr_loc, items=items)
             Logger.info("Running transmutes")
-            self._transmute.run_transmutes(force=False)
+            if self._transmute.run_transmutes(force=False):
+                self._pre_buffed = False
             common.close()
             if not self._curr_loc:
                 return self.trigger_or_stop("end_game", failed=True)
@@ -401,6 +404,7 @@ class Bot:
                 common.close()
             if not self._curr_loc:
                 return self.trigger_or_stop("end_game", failed=True)
+            self._pre_buffed = False
 
         # Start a new run
         started_run = False
@@ -418,6 +422,7 @@ class Bot:
             cv2.imwrite("./info_screenshots/info_failed_game_" + time.strftime("%Y%m%d_%H%M%S") + ".png", grab())
         self._curr_loc = False
         self._pre_buffed = False
+        self._run_counter = 0
         view.save_and_exit()
         set_pause_state(True)
         self._game_stats.log_end_game(failed=failed)
@@ -452,8 +457,11 @@ class Bot:
         self.trigger_or_stop("init")
 
     def on_end_run(self):
-        if not Config().char["pre_buff_every_run"]:
+        self._run_counter += 1
+        if (self._pre_buff_every_run == 0) or (self._run_counter % self._pre_buff_every_run):
             self._pre_buffed = True
+        else:
+            self._pre_buffed = False
         success = self._char.tp_town()
         if success:
             self._curr_loc = self._town_manager.wait_for_tp(self._curr_loc)
