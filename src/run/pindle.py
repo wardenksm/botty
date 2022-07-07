@@ -1,4 +1,5 @@
 from char import IChar
+from config import Config
 from logger import Logger
 from pather import Location, Pather
 from item.pickit import PickIt
@@ -6,6 +7,7 @@ import template_finder
 from town.town_manager import TownManager
 from utils.misc import wait
 from ui import loading
+from shop.anya import AnyaShopper
 
 class Pindle:
 
@@ -24,6 +26,7 @@ class Pindle:
         self._char = char
         self._pickit = pickit
         self.runs = runs
+        self._anya = AnyaShopper() if Config().char["shop_anya"] else None
 
     def approach(self, start_loc: Location) -> bool | Location:
         # Go through Red Portal in A5
@@ -31,11 +34,15 @@ class Pindle:
         loc = self._town_manager.go_to_act(5, start_loc)
         if not loc:
             return False
-        if not self._pather.traverse_nodes((loc, Location.A5_NIHLATHAK_PORTAL), self._char):
+        destination = Location.A5_ANYA if self._anya else Location.A5_NIHLATHAK_PORTAL
+        if not self._pather.traverse_nodes_automap((loc, destination), self._char, force_move=True):
             return False
-        wait(0.5, 0.6)
+        if self._anya is not None:
+            wait(0.3, 0.4)
+            self._anya.check_vendor()
+
         found_loading_screen_func = lambda: loading.wait_for_loading_screen(2.0)
-        if not self._char.select_by_template("A5_RED_PORTAL", found_loading_screen_func, telekinesis=False):
+        if not self._char.select_by_template("A5_RED_PORTAL", found_loading_screen_func, telekinesis=True, dynamic=self._anya is None):
             return False
         return Location.A5_PINDLE_START
 

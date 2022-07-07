@@ -241,6 +241,7 @@ class Config:
             "sell_junk": bool(int(self._select_val("char", "sell_junk"))),
             "enable_no_pickup": bool(int(self._select_val("char", "enable_no_pickup"))),
             "edge_available": bool(int(self._select_val("char", "edge_available"))),
+            "shop_anya": bool(int(self._select_val("char", "shop_anya"))),
         }
         # Sorc base config
         sorc_base_cfg = dict(self.configs["config"]["parser"]["sorceress"])
@@ -387,6 +388,7 @@ class Config:
             "shop_melee_claws": bool(int(self._select_val("claws", "shop_melee_claws"))),
             "shop_3_skills_ias_gloves": bool(int(self._select_val("gloves", "shop_3_skills_ias_gloves"))),
             "shop_2_skills_ias_gloves": bool(int(self._select_val("gloves", "shop_2_skills_ias_gloves"))),
+            "shop_jewelers_archon_plate": bool(int(self._select_val("armors", "shop_jewelers_archon_plate"))),
             "trap_min_score": int(self._select_val("claws", "trap_min_score")),
             "melee_min_score": int(self._select_val("claws", "melee_min_score")),
             "shop_hammerdin_scepters": bool(int(self._select_val("scepters", "shop_hammerdin_scepters"))),

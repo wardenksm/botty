@@ -5,6 +5,7 @@ import math
 
 import keyboard
 import numpy as np
+import cv2
 
 from screen import grab, convert_screen_to_monitor
 from config import Config
@@ -13,9 +14,10 @@ from npc_manager import Npc, open_npc_menu, press_npc_btn
 import template_finder
 from utils.custom_mouse import mouse
 from utils.misc import wait, load_template
+from inventory import common
 
 from messages import Messenger
-
+from shop.i_shopper import IShopper
 
 def exit(run_obj):
     run_time = str(datetime.timedelta(seconds=round(time.time() - run_obj.start_time)))
@@ -38,7 +40,7 @@ def wait_for_loading_screen(timeout):
     return False
 
 
-class AnyaShopper:
+class AnyaShopper(IShopper):
     """
     Shop at Anya for 20 ias, +3 java skill gloves and more...
 
@@ -57,25 +59,68 @@ class AnyaShopper:
         # 9 if you want at least +2 assassin or two useful trap stats
         # 11 if you want at least +3 traps or +2 and a sentry bonus
         # Similar for melee claws but not really worth keeping any less that 11 here since you really want both +2 assassin and a useful other stat, feedback needed
+        super().__init__()
         self.look_for_plus_2_gloves = Config().shop["shop_2_skills_ias_gloves"]
         self.look_for_plus_3_gloves = Config().shop["shop_3_skills_ias_gloves"]
         self.look_for_trap_claws = Config().shop["shop_trap_claws"]
         self.trap_claw_min_score = Config().shop["trap_min_score"]
         self.look_for_melee_claws = Config().shop["shop_melee_claws"]
         self.melee_claw_min_score = Config().shop["melee_min_score"]
+        self.look_for_archon_plates = Config().shop["shop_jewelers_archon_plate"]
         self._messenger = Messenger()
         self.run_count = 0
         self.start_time = time.time()
         self.ias_gloves_seen = 0
         self.gloves_bought = 0
+        self.armor_list = ["IAS_GLOVES"] if self.look_for_plus_3_gloves else []
+        if self.look_for_archon_plates:
+            self.armor_list += ["ARCHON_PLATE_OF_THE_WHALE", "ARCHON_PLATE_OF_STABILITY"]
         # Claws config
         self.roi_claw_stats = [0, 0, Config().ui_pos["screen_width"] // 2, Config().ui_pos["screen_height"] - 100]
-        self.roi_vendor = Config().ui_roi["left_inventory"]
-        self.rx, self.ry, _, _ = self.roi_vendor
-        self.sb_x, self.sb_y = convert_screen_to_monitor((180, 77))
-        self.c_x, self.c_y = convert_screen_to_monitor((Config().ui_pos["center_x"], Config().ui_pos["center_y"]))
         self.claws_evaluated = 0
         self.claws_bought = 0
+
+    def check_vendor(self) -> int:
+        if not open_npc_menu(Npc.ANYA, 3):
+            return 0
+
+        press_npc_btn(Npc.ANYA, "trade")
+        time.sleep(0.1)
+        if not common.wait_for_left_inventory():
+            return 0
+
+        if self.use_edge:
+            keyboard.send(Config().char["weapon_switch"])
+        items_bought = 0
+        if len(self.armor_list):
+            common.select_tab(0)
+            img = grab(force_new=True).copy()
+            for match in template_finder.search_all(self.armor_list, img, 0.994, Config().ui_roi["left_inventory"], use_grayscale=False):
+                x,y,w,h = match.region
+                r = self.check_vendor_item(match.center_monitor)
+                if r > 0:
+                    items_bought += 1
+                #elif r < 0:
+                    #cv2.imwrite(f"./debug_screenshots/fp_{time.strftime('%Y%m%d_%H%M%S')}_{int(match.score*1000)}.png", img[y:y+h,x:x+w])
+                #else:
+                    #cv2.imwrite(f"./debug_screenshots/tp_{time.strftime('%Y%m%d_%H%M%S')}_{int(match.score*1000)}.png", img[y:y+h,x:x+w])
+
+        if self.look_for_trap_claws or self.look_for_melee_claws:
+            common.select_tab(1)
+            img = grab(force_new=True).copy()
+            # Anya sells claws only. Just check whether the slot is empy.
+            for x in range(3):
+                for y in range(3):
+                    center = self.inspect_slot(img, x, y * 3 + 1)
+                    if center is None:
+                        break
+                    if self.check_vendor_item(convert_screen_to_monitor(center)) > 0:
+                        items_bought += 1
+
+        if self.use_edge:
+            keyboard.send(Config().char["weapon_switch"])
+        common.close()
+        return items_bought
 
     def run(self):
         Logger.info("Personal Anya Shopper at your service! Hang on, running some errands...")
