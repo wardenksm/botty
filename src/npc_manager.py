@@ -82,6 +82,10 @@ npcs = {
             "trade": {
                 "white": color_filter(template_finder.get_template("TRADE"), Config().colors["white"])[1],
                 "blue": color_filter(template_finder.get_template("TRADE_BLUE"), Config().colors["blue"])[1],
+            },
+            "gamble": {
+                "white": color_filter(template_finder.get_template("GAMBLE"), Config().colors["white"])[1],
+                "blue": color_filter(template_finder.get_template("GAMBLE_BLUE"), Config().colors["blue"])[1],
             }
         },
         "template_group": ["ANYA_FRONT", "ANYA_BACK", "ANYA_SIDE"]

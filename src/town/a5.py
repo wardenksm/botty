@@ -20,6 +20,7 @@ class A5(IAct):
     def can_resurrect(self) -> bool: return True
     def can_identify(self) -> bool: return True
     def can_stash(self) -> bool: return True
+    def can_gamble(self) -> bool: return True
     def can_trade_and_repair(self) -> bool: return True
 
     def heal(self, curr_loc: Location) -> Location | bool:
@@ -89,4 +90,11 @@ class A5(IAct):
         success = template_finder.search_and_wait(["A5_TOWN_1", "A5_TOWN_0"], timeout=20).valid
         if success:
             return Location.A5_TOWN_START
+        return False
+
+    def gamble(self, curr_loc: Location) -> Location | bool:
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A5_ANYA), self._char, force_move=True): return False
+        if open_npc_menu(Npc.ANYA):
+            press_npc_btn(Npc.ANYA, "gamble")
+            return Location.A5_NIHLATHAK_PORTAL
         return False
