@@ -42,18 +42,6 @@ class LightSorc(Sorceress):
             wait(delay[0], delay[1])
             mouse.release(button="right")
 
-    def _frozen_orb(self, cast_pos_abs: tuple[float, float], delay: tuple[float, float] = (0.2, 0.3), spray: float = 10):
-        if self._skill_hotkeys["frozen_orb"]:
-            keyboard.send(self._skill_hotkeys["frozen_orb"])
-            for _ in range(3):
-                x = cast_pos_abs[0] + (random.random() * 2 * spray - spray)
-                y = cast_pos_abs[1] + (random.random() * 2 * spray - spray)
-                cast_pos_monitor = convert_abs_to_monitor((x, y))
-                mouse.move(*cast_pos_monitor)
-                mouse.press(button="right")
-                wait(delay[0], delay[1])
-                mouse.release(button="right")
-
     def kill_pindle(self) -> bool:
         pindle_pos_abs = convert_screen_to_abs(Config().path["pindle_end"][0])
         cast_pos_abs = [pindle_pos_abs[0] * 0.9, pindle_pos_abs[1] * 0.9]
