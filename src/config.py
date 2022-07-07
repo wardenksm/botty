@@ -213,6 +213,7 @@ class Config:
             "gamble_items": False if not self._select_val("char", "gamble_items") else self._select_val("char", "gamble_items").replace(" ","").split(","),
             "sell_junk": bool(int(self._select_val("char", "sell_junk"))),
             "enable_no_pickup": bool(int(self._select_val("char", "enable_no_pickup"))),
+            "edge_available": bool(int(self._select_val("char", "edge_available"))),
             "safer_routines": bool(int(self._select_val("char", "safer_routines"))),
             "mob_detection": bool(int(self._select_val("char", "mob_detection"))),
             "dia_town_visits": bool(int(self._select_val("char", "dia_town_visits"))),
