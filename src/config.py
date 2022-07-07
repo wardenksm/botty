@@ -185,7 +185,7 @@ class Config:
             "use_merc": bool(int(self._select_val("char", "use_merc"))),
             "open_chests": bool(int(self._select_val("char", "open_chests"))),
             "fill_shared_stash_first": bool(int(self._select_val("char", "fill_shared_stash_first"))),
-            "pre_buff_every_run": bool(int(self._select_val("char", "pre_buff_every_run"))),
+            "pre_buff_every_run": int(self._select_val("char", "pre_buff_every_run")),
             "cta_available": bool(int(self._select_val("char", "cta_available"))),
             "weapon_switch": self._select_val("char", "weapon_switch"),
             "battle_orders": self._select_val("char", "battle_orders"),
