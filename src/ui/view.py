@@ -16,7 +16,7 @@ def enable_no_pickup() -> bool:
     """
     keyboard.send('enter')
     wait(0.1, 0.25)
-    keyboard.write('/nopickup',delay=.20)
+    keyboard.write('/nopickup',delay=.10)
     keyboard.send('enter')
     wait(0.1, 0.25)
     if not (item_pickup_text := wait_until_visible(ScreenObjects.ItemPickupText, timeout=1.3)).valid:
@@ -25,10 +25,7 @@ def enable_no_pickup() -> bool:
         return True
     keyboard.send('enter')
     wait(0.1, 0.25)
-    keyboard.send('up')
-    wait(0.1, 0.25)
-    keyboard.send('enter')
-    wait(0.1, 0.25)
+    keyboard.send('up,enter')
     return True
 
 def save_and_exit() -> bool:
