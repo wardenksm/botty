@@ -79,7 +79,7 @@ def crop_text_clusters(inp_img: np.ndarray, padding_y: int = 5) -> list[ItemText
         setattr(cluster, "ocr_result", results[count])
     return item_clusters
 
-def crop_item_tooltip(image: np.ndarray, model: str = "hover-eng_inconsolata_inv_th_fast") -> tuple[ItemText, str]:
+def crop_item_tooltip(image: np.ndarray, model: str = "hover-eng_inconsolata_inv_th_fast", in_right_inv: bool = True) -> tuple[ItemText, str]:
     """
     Crops visible item description boxes / tooltips
     :inp_img: image from hover over item of interest.
@@ -91,6 +91,7 @@ def crop_item_tooltip(image: np.ndarray, model: str = "hover-eng_inconsolata_inv
     contours = cv2.findContours(
         black_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
+    inv_roi = Config().ui_roi["right_inventory"] if in_right_inv else Config().ui_roi["left_inventory"]
     for cntr in contours:
         x, y, w, h = cv2.boundingRect(cntr)
         cropped_item = image[y:y+h, x:x+w]
@@ -116,13 +117,8 @@ def crop_item_tooltip(image: np.ndarray, model: str = "hover-eng_inconsolata_inv
             continue
 
         # check to see if contour overlaps right inventory
-        right_inv = Config().ui_roi["right_inventory"]
-        overlaps_inventory = not (
-            x+w < right_inv[0] or right_inv[0]+right_inv[2] < x or y+h+60 < right_inv[1] or right_inv[1]+right_inv[3] < y)
-        if not overlaps_inventory:
-            left_inv = Config().ui_roi["left_inventory"]
-            overlaps_inventory |= not (
-                x+w < left_inv[0] or left_inv[0]+left_inv[2] < x or y+h+60 < left_inv[1] or left_inv[1]+left_inv[3] < y)
+        overlaps_inventory = not (x+w < inv_roi[0] or inv_roi[0]+inv_roi[2] < x or y+h+60 < inv_roi[1] or inv_roi[1]+inv_roi[3] < y)
+
         if not overlaps_inventory:
             continue
 

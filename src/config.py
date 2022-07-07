@@ -211,6 +211,7 @@ class Config:
             "runs_per_stash": False if not self._select_val("char", "runs_per_stash") else int(self._select_val("char", "runs_per_stash")),
             "runs_per_repair": False if not self._select_val("char", "runs_per_repair") else int(self._select_val("char", "runs_per_repair")),
             "gamble_items": False if not self._select_val("char", "gamble_items") else self._select_val("char", "gamble_items").replace(" ","").split(","),
+            "shop_anya": bool(int(self._select_val("char", "shop_anya"))),
             "sell_junk": bool(int(self._select_val("char", "sell_junk"))),
             "enable_no_pickup": bool(int(self._select_val("char", "enable_no_pickup"))),
             "edge_available": bool(int(self._select_val("char", "edge_available"))),
@@ -342,12 +343,9 @@ class Config:
             self.path[key] = np.reshape(np.array([int(x) for x in self._select_val("path", key).split(",")]), (-1, 2))
 
         self.shop = {
-            "shop_trap_claws": bool(int(self._select_val("claws", "shop_trap_claws"))),
-            "shop_melee_claws": bool(int(self._select_val("claws", "shop_melee_claws"))),
-            "shop_3_skills_ias_gloves": bool(int(self._select_val("gloves", "shop_3_skills_ias_gloves"))),
-            "shop_2_skills_ias_gloves": bool(int(self._select_val("gloves", "shop_2_skills_ias_gloves"))),
-            "trap_min_score": int(self._select_val("claws", "trap_min_score")),
-            "melee_min_score": int(self._select_val("claws", "melee_min_score")),
+            "shop_claws": bool(int(self._select_val("claws", "shop_claws"))),
+            "shop_skills_ias_gloves": bool(int(self._select_val("gloves", "shop_skills_ias_gloves"))),
+            "shop_jewelers_archon_plate": bool(int(self._select_val("armors", "shop_jewelers_archon_plate"))),
             "shop_hammerdin_scepters": bool(int(self._select_val("scepters", "shop_hammerdin_scepters"))),
             "speed_factor": float(self._select_val("scepters", "speed_factor")),
             "apply_pather_adjustment": bool(int(self._select_val("scepters", "apply_pather_adjustment"))),

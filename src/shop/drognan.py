@@ -15,6 +15,7 @@ from npc_manager import Npc, open_npc_menu, press_npc_btn
 import template_finder
 from utils.custom_mouse import mouse
 from utils.misc import wait
+from shop.i_shopper import IShopper
 
 
 def exit(run_obj):
@@ -28,7 +29,7 @@ def exit(run_obj):
     os._exit(0)
 
 
-class DrognanShopper:
+class DrognanShopper(IShopper):
     """
     Shop at Drognan for Items.
     Currently supported: Hammerdin scepters
@@ -44,6 +45,7 @@ class DrognanShopper:
 
         # Set look_for variables to False if you dont like your personal shopper to look for these
         # Obviously something need to be set to True, or your shopper will be very confused
+        super().__init__()
         self.look_for_scepters = Config().shop["shop_hammerdin_scepters"]
         self.speed_factor = 1.0 + Config().shop["speed_factor"]
         if (self.speed_factor <= 0):
@@ -56,10 +58,6 @@ class DrognanShopper:
 
         # items config
         self.roi_shop_item_stats = [0, 0, Config().ui_pos["screen_width"] // 2, Config().ui_pos["screen_height"] - 100]
-        self.roi_vendor = Config().ui_roi["left_inventory"]
-        self.rx, self.ry, _, _ = self.roi_vendor
-        self.sb_x, self.sb_y = convert_screen_to_monitor((180, 77))
-        self.c_x, self.c_y = convert_screen_to_monitor((Config().ui_pos["center_x"], Config().ui_pos["center_y"]))
         self.items_evaluated = 0
         self.items_bought = 0
 

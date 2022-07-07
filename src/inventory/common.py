@@ -212,10 +212,10 @@ def get_active_tab(indicator: TemplateMatch = None) -> int:
             Logger.error("common/get_active_tab(): Error finding tab indicator")
     return -1
 
-def select_tab(idx: int):
+def select_tab(idx: int, skip_check: bool = False):
     # stash or vendor must be open
     # indices start from 0
-    if not get_active_tab() == idx:
+    if skip_check or not get_active_tab() == idx:
         tab = tab_properties(idx)
         pos = convert_screen_to_monitor(tab["center"])
         mouse.move(*pos)

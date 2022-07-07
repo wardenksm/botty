@@ -26,8 +26,8 @@ def get_ground_loot(image: np.ndarray, consolidate: bool = False) -> GroundItemL
 
 import traceback #TODO REMOV THIS
 
-def get_hovered_item(image: np.ndarray, model = "hover-eng_inconsolata_inv_th_fast") -> tuple[HoveredItem, ItemText]:
-    res, quality = crop_item_tooltip(image, model)
+def get_hovered_item(image: np.ndarray, model = "hover-eng_inconsolata_inv_th_fast", in_right_inv = True) -> tuple[HoveredItem, ItemText]:
+    res, quality = crop_item_tooltip(image, model, in_right_inv)
     parsed_item = None
     if res.ocr_result:
         try:
