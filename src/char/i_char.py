@@ -1,13 +1,13 @@
 from typing import Callable
 from dataclasses import dataclass
-import time
+import time, math, random
 import cv2
-import math
 from item import consumables
+import health_manager
 import keyboard
 import numpy as np
 from char.capabilities import CharacterCapabilities
-from ui_manager import is_visible, wait_until_visible
+from ui_manager import is_visible, wait_until_visible, detect_screen_object, ScreenObjects, get_closest_non_hud_pixel
 from ui import skills
 from utils.custom_mouse import mouse
 from utils.misc import wait, cut_roi, is_in_roi, color_filter, arc_spread
@@ -15,8 +15,7 @@ from logger import Logger
 from config import Config
 from screen import grab, convert_monitor_to_screen, convert_screen_to_abs, convert_abs_to_monitor, convert_screen_to_monitor
 import template_finder
-from ui_manager import detect_screen_object, ScreenObjects, get_closest_non_hud_pixel
-from inventory import belt
+from inventory import personal, common, belt
 
 @dataclass
 class MonsterInfo:
@@ -373,6 +372,23 @@ class IChar:
             consumables.increment_need("tp", 1)
             time.sleep(self._cast_duration)
             return True
+        # cast from inventory
+        health_manager.set_pause_state(True)
+        img = personal.open()
+        match = template_finder.search(
+            ["INV_SCROLL_TP", "TP_TOME"], img,
+            roi = Config().ui_roi["right_inventory"],
+            best_match = True
+        )
+        success = False
+        if match.valid:
+            mouse.move(*match.center_monitor)
+            mouse.click("right")
+            consumables.increment_need("tp", 1)
+            success = True
+        common.close()
+        health_manager.set_pause_state(False)
+        return success
 
     def tp_town(self):
         # will check if tp is available and select the skill
@@ -398,12 +414,26 @@ class IChar:
                 if self.cast_tp():
                     wait(0.56, 0.6) # takes quite a while for tp to be visible
             pos = None
-            if (template_match := detect_screen_object(ScreenObjects.TownPortal)).valid:
+            img = grab()
+            if (template_match := detect_screen_object(ScreenObjects.TownPortal, img)).valid:
                 pos = template_match.center_monitor
-                pos = (pos[0], pos[1] + 30)
                 # Note: Template is top of portal, thus move the y-position a bit to the bottom
+                pos = (pos[0], pos[1] + 30)
+            else:
+                # Look for the blue circle
+                tp_img = cut_roi(img, Config().ui_roi["tp_search"])
+                hsv = cv2.cvtColor(tp_img, cv2.COLOR_BGR2HSV)
+                color_range = Config().colors["blue_portal"]
+                mask = cv2.inRange(hsv, color_range[0], color_range[1])
+                kernel = np.ones((2, 2), 'uint8')
+                mask = cv2.erode(mask, kernel, None, iterations=1)
+                if cv2.countNonZero(mask) > 100:
+                    m = cv2.moments(mask)
+                    x = round(m['m10']/m['m00']) + Config().ui_roi["tp_search"][0]
+                    y = round(m['m01']/m['m00']) + Config().ui_roi["tp_search"][1]
+                    pos = convert_screen_to_monitor((x, y))
+            if pos is not None:
                 mouse.move(*pos, randomize=6, delay_factor=[0.9, 1.1])
-                wait(0.08, 0.15)
                 mouse.click(button="left")
                 if wait_until_visible(ScreenObjects.Loading, 2).valid:
                     return True
