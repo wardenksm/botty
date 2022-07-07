@@ -5,9 +5,9 @@ from utils.custom_mouse import mouse
 from char import IChar
 import template_finder
 from pather import Pather
-from screen import grab
+from screen import grab, convert_abs_to_monitor
 from utils.misc import wait
-import time
+import time, random
 from pather import Pather
 from config import Config
 from ui_manager import ScreenObjects, is_visible
@@ -92,3 +92,15 @@ class Sorceress(IChar):
             while time.time() - start < duration:
                 mouse.click(button="right")
                 wait(self._cast_duration)
+
+    def _frozen_orb(self, cast_pos_abs: tuple[float, float], delay: tuple[float, float] = (0.2, 0.3), spray: float = 10):
+        if self._skill_hotkeys["frozen_orb"]:
+            keyboard.send(self._skill_hotkeys["frozen_orb"])
+            for _ in range(1):
+                x = cast_pos_abs[0] + (random.random() * 2 * spray - spray)
+                y = cast_pos_abs[1] + (random.random() * 2 * spray - spray)
+                cast_pos_monitor = convert_abs_to_monitor((x, y), avoid_hud=True)
+                mouse.move(*cast_pos_monitor)
+                mouse.press(button="right")
+                wait(*delay)
+                mouse.release(button="right")
