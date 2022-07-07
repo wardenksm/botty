@@ -147,6 +147,8 @@ class TownManager:
             # Sell items, if any
             if items:
                 items = personal.transfer_items(items, action = "sell")
+            # Check items for sale at vendor
+            self._acts[curr_act].shop_healer()
             common.close()
             return new_loc, items
         Logger.warning(f"Could not buy consumables in {curr_act}. Continue.")

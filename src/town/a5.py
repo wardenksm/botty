@@ -7,11 +7,14 @@ import template_finder
 from utils.misc import wait
 from ui_manager import ScreenObjects, is_visible
 from config import Config
+from shop.malah import MalahShopper
+import keyboard
 
 class A5(IAct):
     def __init__(self, pather: Pather, char: IChar):
         self._pather = pather
         self._char = char
+        self._malah_shopper = MalahShopper() if Config().char["shop_malah"] else None
 
     def get_wp_location(self) -> Location: return Location.A5_WP
     def can_heal(self) -> bool: return True
@@ -26,6 +29,10 @@ class A5(IAct):
         keyboard.send("tab")
         if self._pather.traverse_nodes_automap((curr_loc, Location.A5_MALAH), self._char, force_move=True, toggle_map=False):
             if open_npc_menu_map(Npc.MALAH, toggle_map=False) or open_npc_menu(Npc.MALAH, 10):
+                if self._malah_shopper is not None:
+                    press_npc_btn(Npc.MALAH, "trade")
+                    self._malah_shopper.check_vendor_stash()
+                    keyboard.send(Config().char["clear_screen"])
                 return Location.A5_MALAH
         keyboard.send(Config().char["clear_screen"])
         return False
@@ -90,6 +97,10 @@ class A5(IAct):
         if success:
             return Location.A5_TOWN_START
         return False
+
+    def shop_healer(self) -> int:
+        if self._malah_shopper is not None:
+            return self._malah_shopper.check_vendor_stash()
 
     def gamble(self, curr_loc: Location) -> Location | bool:
         if not self._pather.traverse_nodes_automap((curr_loc, Location.A5_ANYA), self._char, force_move=True): return False

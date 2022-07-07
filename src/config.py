@@ -242,6 +242,7 @@ class Config:
             "enable_no_pickup": bool(int(self._select_val("char", "enable_no_pickup"))),
             "edge_available": bool(int(self._select_val("char", "edge_available"))),
             "shop_anya": bool(int(self._select_val("char", "shop_anya"))),
+            "shop_malah": bool(int(self._select_val("char", "shop_malah"))),
         }
         # Sorc base config
         sorc_base_cfg = dict(self.configs["config"]["parser"]["sorceress"])
@@ -392,6 +393,8 @@ class Config:
             "trap_min_score": int(self._select_val("claws", "trap_min_score")),
             "melee_min_score": int(self._select_val("claws", "melee_min_score")),
             "shop_hammerdin_scepters": bool(int(self._select_val("scepters", "shop_hammerdin_scepters"))),
+            "shop_wands": bool(int(self._select_val("misc", "shop_wands"))),
+            "shop_knives": bool(int(self._select_val("misc", "shop_knives"))),
             "speed_factor": float(self._select_val("scepters", "speed_factor")),
             "apply_pather_adjustment": bool(int(self._select_val("scepters", "apply_pather_adjustment"))),
         }

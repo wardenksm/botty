@@ -30,3 +30,4 @@ class IAct:
     def open_trade_and_repair_menu(self, curr_loc: Location) -> Location | bool: return False
     def identify(self, curr_loc: Location) -> Location | bool: return False
     def gamble(self, curr_loc: Location) -> Location | bool: return False
+    def shop_healer(self) -> int: return 0
