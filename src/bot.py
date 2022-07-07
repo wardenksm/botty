@@ -398,7 +398,13 @@ class Bot:
         while vendor.get_gamble_status() and Config().char["gamble_items"]:
             Logger.debug("Head to gamble")
             self._curr_loc = self._town_manager.gamble(self._curr_loc)
+            use_edge = Config().char["edge_available"]
+            if use_edge:
+                keyboard.send(Config().char["weapon_switch"])
             items = vendor.gamble()
+            if use_edge:
+                keyboard.send(Config().char["weapon_switch"])
+            self._char.town_buff()
             if items:
                 self._curr_loc, _ = self._town_manager.stash(self._curr_loc, items = items)
                 common.close()
