@@ -61,6 +61,11 @@ class IChar:
         # Add a bit to be on the save side
         self._cast_duration = Config().char["casting_frames"] * 0.04 + 0.01
         self.damage_scaling = float(Config().char.get("damage_scaling", 1.0))
+        if Config().char["attack_frames"]:
+            self._attack_duration = Config().char["attack_frames"] * 0.04 + 0.01
+        else:
+            self._attack_duration = self._cast_duration
+
         self._fe_explosin_cnt = 0
         self._found_monster_bar = False
         self._monster_gone_cnt = 0
