@@ -6,7 +6,7 @@ import template_finder
 from pather import Pather
 from screen import grab, convert_abs_to_monitor
 from utils.misc import wait
-import time, random
+import time, math, random
 from pather import Pather
 from config import Config
 from ui_manager import ScreenObjects, is_visible
@@ -38,9 +38,10 @@ class Sorceress(IChar):
         self,
         template_type:  str | list[str],
         success_func: Callable = None,
-        timeout: float = 8,
+        timeout: float = 4,
         threshold: float = 0.68,
-        telekinesis: bool = False
+        telekinesis: bool = False,
+        dynamic: bool = False
     ) -> bool:
         # In case telekinesis is False or hotkey is not set, just call the base implementation
         if not self._skill_hotkeys["telekinesis"] or not telekinesis:
@@ -50,14 +51,19 @@ class Sorceress(IChar):
             if is_visible(ScreenObjects.WaypointLabel):
                 keyboard.send("esc")
         start = time.time()
-        while timeout is None or (time.time() - start) < timeout:
+        keyboard.send(self._skill_hotkeys["telekinesis"])
+        prev_center = (0,0)
+        while timeout is None or time.time() - start < timeout:
             template_match = template_finder.search(template_type, grab(), threshold=threshold)
             if template_match.valid:
-                keyboard.send(self._skill_hotkeys["telekinesis"])
-                wait(0.1, 0.2)
-                mouse.move(*template_match.center_monitor)
-                wait(0.2, 0.3)
-                mouse.click(button="right")
+                mouse.move(*template_match.center_monitor, is_async=True)
+                if dynamic and math.dist(prev_center,template_match.center) > 3:
+                    prev_center = template_match.center
+                    time.sleep(0.1)
+                    continue
+                else:
+                    mouse.sync()
+                    mouse.click(button="right")
                 # check the successfunction for 2 sec, if not found, try again
                 check_success_start = time.time()
                 while time.time() - check_success_start < 2:
