@@ -89,6 +89,7 @@ class A5(IAct):
     def wait_for_tp(self) -> Location | bool:
         success = template_finder.search_and_wait(["A5_TOWN_1", "A5_TOWN_0"], timeout=20).valid
         if success:
+            self._char.walk((40, -20), force_move=True)
             return Location.A5_TOWN_START
         return False
 
