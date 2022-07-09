@@ -474,17 +474,17 @@ class IChar:
             Config().char["cta_available"] = 0
         else:
             # We switched succesfully, let's pre buff
-            mouse.click(button="right")
-            wait(self._cast_duration + 0.16, self._cast_duration + 0.18)
+            mouse.press(button="right")
             self._select_skill(skill = "battle_orders", mouse_click_type="right", delay=(0.1, 0.2))
-            mouse.click(button="right")
-            wait(self._cast_duration + 0.16, self._cast_duration + 0.18)
+            time.sleep(self._cast_duration + 0.08)
+            mouse.release(button="right")
+            wait(self._cast_duration + 0.08, self._cast_duration + 0.12)
 
         # Make sure the switch back to the original weapon is good
         start = time.time()
         while time.time() - start < 4:
             keyboard.send(Config().char["weapon_switch"])
-            wait(0.3, 0.35)
+            wait(0.2, 0.25)
             skill_after = cut_roi(grab(), Config().ui_roi["skill_right"])
             _, max_val, _, _ = cv2.minMaxLoc(cv2.matchTemplate(skill_after, skill_before, cv2.TM_CCOEFF_NORMED))
             if max_val > 0.9:
