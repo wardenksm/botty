@@ -1,4 +1,5 @@
 from char import IChar
+from config import Config
 from logger import Logger
 from pather import Location, Pather
 from item.pickit import PickIt
@@ -66,7 +67,9 @@ class ShenkEld:
                 return False
             self._char.kill_shenk()
             loc = Location.A5_SHENK_END
-            wait(1.9, 2.4) # sometimes merc needs some more time to kill shenk...
+            if template_finder.search_and_wait(["SHENK_DEATH_0", "SHENK_DEATH_1", "SHENK_DEATH_2", "SHENK_DEATH_3", "SHENK_DEATH_4"],
+                                            threshold=0.65, timeout=2.4, roi=Config().ui_roi["cut_skill_bar"]).valid:
+                Logger.info("Shenk dead")
             picked_up_items |= self._pickit.pick_up_items(self._char)
 
         return (loc, picked_up_items)
