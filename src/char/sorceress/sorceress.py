@@ -9,7 +9,7 @@ from utils.misc import wait
 import time, math, random
 from pather import Pather
 from config import Config
-from ui_manager import ScreenObjects, is_visible
+from ui_manager import ScreenObjects, center_mouse, is_visible
 
 class Sorceress(IChar):
     def __init__(self, skill_hotkeys: dict, pather: Pather):
@@ -70,6 +70,13 @@ class Sorceress(IChar):
         return super().select_by_template(template_type, success_func, timeout, threshold)
 
     def pre_buff(self):
+        if self._skill_hotkeys["oak_sage"]:
+            if not template_finder.search(["SPIRIT"], grab(), 0.80, self._summon_roi).valid:
+                keyboard.send(self._skill_hotkeys["oak_sage"])
+                center_mouse()
+                if self.skill_is_charged():
+                    mouse.click(button="right")
+                    wait(self._cast_duration)
         if Config().char["cta_available"]:
             self._pre_buff_cta()
         if self._skill_hotkeys["energy_shield"]:
