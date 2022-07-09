@@ -74,24 +74,22 @@ class Sorceress(IChar):
             self._pre_buff_cta()
         if self._skill_hotkeys["energy_shield"]:
             keyboard.send(self._skill_hotkeys["energy_shield"])
-            wait(0.1, 0.13)
+            wait(0.04, 0.06)
             mouse.click(button="right")
             wait(self._cast_duration)
         if self._skill_hotkeys["thunder_storm"]:
             keyboard.send(self._skill_hotkeys["thunder_storm"])
-            wait(0.1, 0.13)
+            wait(0.04, 0.06)
             mouse.click(button="right")
             wait(self._cast_duration)
         if self._skill_hotkeys["frozen_armor"]:
             keyboard.send(self._skill_hotkeys["frozen_armor"])
-            wait(0.1, 0.13)
+            wait(0.04, 0.06)
             mouse.click(button="right")
-            wait(self._cast_duration)
 
     def _cast_static(self, duration: float = 1.4):
         if self._skill_hotkeys["static_field"]:
             keyboard.send(self._skill_hotkeys["static_field"])
-            wait(0.1, 0.13)
             start = time.time()
             while time.time() - start < duration:
                 mouse.click(button="right")
