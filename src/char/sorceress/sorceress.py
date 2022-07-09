@@ -22,16 +22,13 @@ class Sorceress(IChar):
     def pick_up_item(self, pos: tuple[float, float], item_name: str = None, prev_cast_start: float = 0):
         if self._skill_hotkeys["telekinesis"] and any(x in item_name for x in ['potion', 'misc_gold', 'tp_scroll']):
             keyboard.send(self._skill_hotkeys["telekinesis"])
-            wait(0.1, 0.2)
             mouse.move(pos[0], pos[1])
-            wait(0.1, 0.2)
             mouse.click(button="right")
-            # need about 0.4s delay before next capture for the item not to persist on screen
             cast_start = time.time()
-            interval = (cast_start - prev_cast_start)
-            cast_duration_wait = (self._cast_duration - interval)
-            delay = 0.35 if cast_duration_wait <0 else (0.35+cast_duration_wait)
-            wait(delay,delay+0.1)
+            # need about 0.4s delay before next capture for the item not to persist on screen
+            interval = cast_start - prev_cast_start
+            delay = max(0.35, self._cast_duration - interval)
+            time.sleep(delay)
             return cast_start
         else:
             return super().pick_up_item(pos, item_name, prev_cast_start)
