@@ -532,6 +532,8 @@ class IChar:
             mouse.release(button=btn)
         keyboard.send(Config().char["stand_still"], do_press=False)
 
+    def town_buff(self):
+        pass
 
     def pre_buff(self):
         pass

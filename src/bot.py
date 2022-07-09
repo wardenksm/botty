@@ -274,6 +274,7 @@ class Bot:
             self._char.remap_right_skill_hotkey("TELE_ACTIVE", Config().char["teleport"])
 
         # Run /nopickup command to avoid picking up stuff on accident
+        self._char.town_buff()
         if Config().char["enable_no_pickup"] and (not self._ran_no_pickup and not self._game_stats._nopickup_active):
             self._ran_no_pickup = True
             if view.enable_no_pickup():
