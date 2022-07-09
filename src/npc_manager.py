@@ -113,7 +113,7 @@ npcs = {
         },
         "roi": [444, 13, (816-444), (331-13)],
         "poses": [[526, 131], [602, 192], [698, 218], [756, 188]],
-        "template_group": ["ORMUS_0", "ORMUS_1", "ORMUS_2", "ORMUS_3", "ORMUS_4", "ORMUS_5"]
+        "template_group": ["ORMUS_0", "ORMUS_1", "ORMUS_2", "ORMUS_3", "ORMUS_4", "ORMUS_5", "ORMUS_6"]
     },
     Npc.FARA: {
         "name_tag_white": color_filter(template_finder.get_template("FARA_NAME_TAG_WHITE"), Config().colors["white"])[1],
