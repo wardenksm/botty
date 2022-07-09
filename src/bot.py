@@ -337,7 +337,7 @@ class Bot:
         img = grab()
         need_refill = (
             consumables.should_buy("health", min_needed = 3) or
-            consumables.should_buy("mana", min_needed = 3) or
+            consumables.should_buy("mana", min_needed = 2) or
             (self._use_keys and consumables.should_buy("key", min_remaining = 4)) or
             consumables.should_buy("tp", min_remaining = 3) or
             consumables.should_buy("id", min_remaining = 3)
