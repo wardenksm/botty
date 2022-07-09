@@ -31,11 +31,11 @@ class Pindle:
         loc = self._town_manager.go_to_act(5, start_loc)
         if not loc:
             return False
-        if not self._pather.traverse_nodes_automap((loc, Location.A5_NIHLATHAK_PORTAL), self._char):
+        if not self._pather.traverse_nodes_automap((loc, Location.A5_NIHLATHAK_PORTAL), self._char, force_move=True):
             return False
         wait(0.5, 0.6)
         found_loading_screen_func = lambda: loading.wait_for_loading_screen(2.0)
-        if not self._char.select_by_template("A5_RED_PORTAL", found_loading_screen_func, telekinesis=False):
+        if not self._char.select_by_template("A5_RED_PORTAL", found_loading_screen_func, telekinesis=True):
             return False
         return Location.A5_PINDLE_START
 
@@ -48,9 +48,9 @@ class Pindle:
         # move to pindle
         if self._char.capabilities.can_teleport_natively:
             self._pather.traverse_nodes_fixed("pindle_safe_dist", self._char)
-        elif not self._pather.traverse_nodes_automap((Location.A5_PINDLE_START, Location.A5_PINDLE_SAFE_DIST), self._char):
+        elif not self._pather.traverse_nodes((Location.A5_PINDLE_START, Location.A5_PINDLE_SAFE_DIST), self._char, force_move=True):
             return False
         self._char.kill_pindle()
-        wait(0.2, 0.3)
+        wait(0.25, 0.3)
         picked_up_items = self._pickit.pick_up_items(self._char)
         return (Location.A5_PINDLE_END, picked_up_items)
