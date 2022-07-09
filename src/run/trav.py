@@ -56,15 +56,26 @@ class Trav:
             if not self._pather.traverse_nodes_automap([1221, 1222, 1223, 1224, 1225, 1226], self._char, force_move=True):
                 return False
         self._char.kill_council()
-        picked_up_items = self._pickit.pick_up_items(self._char)
-        wait(0.2, 0.3)
+        picked_up_items = self._pickit.pick_up_items(self._char, order = 'bottom-to-top')
         # If we can teleport we want to move back inside and also check loot there
-        if self._char.capabilities.can_teleport_natively or self._char.capabilities.can_teleport_with_charges:
-            if not self._pather.traverse_nodes([229], self._char, timeout=2.5, use_tp_charge=self._char.capabilities.can_teleport_natively):
-                self._pather.traverse_nodes([228, 229], self._char, timeout=2.5, use_tp_charge=True)
-            picked_up_items |= self._pickit.pick_up_items(self._char)
+        keyboard.send("tab")
+        wait(0.2, 0.3)
+        match = template_finder.search_and_wait(["TRAV_AUTOMAP"], threshold=0.75, timeout=1)
+        if match.valid:
+            ref_pos_abs = convert_screen_to_abs(match.center)
+            # Check if we are inside the temple
+            if ref_pos_abs[1] * 2 - ref_pos_abs[0] < 370:
+                if self._char.capabilities.can_teleport_with_charges:
+                    if not self._pather.traverse_nodes_automap([1228], self._char, timeout=2, toggle_map=False):
+                        self._pather.traverse_nodes([1229], self._char, timeout=2.5, use_tp_charge=True)
+                elif not self._char.capabilities.can_teleport_natively:
+                    self._pather.traverse_nodes_automap([1226, 1228], self._char, timeout=2.5, toggle_map=False)
+                else:
+                    self._pather.traverse_nodes([1229], self._char, timeout=2.5, use_tp_charge=True)
+                picked_up_items |= self._pickit.pick_up_items(self._char)
         # If travincal run is not the last run
         if self.name != self._runs[-1]:
             # Make sure we go back to the center to not hide the tp
-            self._pather.traverse_nodes_automap([1230], self._char, timeout=2.5)
+            self._pather.traverse_nodes_automap([1230], self._char, timeout=2.5, toggle_map=False)
+        keyboard.send(Config().char["clear_screen"])
         return (Location.A3_TRAV_CENTER_STAIRS, picked_up_items)
