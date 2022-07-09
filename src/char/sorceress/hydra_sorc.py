@@ -40,14 +40,14 @@ class HydraSorc(Sorceress):
             cast_pos_monitor = convert_abs_to_monitor((x, y))
             mouse.move(*cast_pos_monitor)
             mouse.press(button="right")
-            wait(2,3)
+            wait(self._cast_duration * 5, self._cast_duration * 5 + 0.2)
             mouse.release(button="right")        
 
     def kill_pindle(self) -> bool:
         pindle_pos_abs = convert_screen_to_abs(Config().path["pindle_end"][0])
         cast_pos_abs = [pindle_pos_abs[0] * 0.9, pindle_pos_abs[1] * 0.9]
+        self._hydra(cast_pos_abs, spray=0)
         for _ in range(int(Config().char["atk_len_pindle"])):
-            self._hydra(cast_pos_abs, spray=0)
             self._alt_attack(cast_pos_abs, spray=11)
         # Move to items
         wait(self._cast_duration, self._cast_duration + 0.2)
@@ -58,9 +58,9 @@ class HydraSorc(Sorceress):
     def kill_eldritch(self) -> bool:
         eld_pos_abs = convert_screen_to_abs(Config().path["eldritch_end"][0])
         cast_pos_abs = [eld_pos_abs[0] * 0.9, eld_pos_abs[1] * 0.9]
+        self._hydra(cast_pos_abs, spray=0)
         for _ in range(int(Config().char["atk_len_eldritch"])):
-            self._hydra(cast_pos_abs, spray=0)
-            self._alt_attack(cast_pos_abs, spray=90)
+            self._alt_attack(cast_pos_abs, spray=60)
         # Move to items
         wait(self._cast_duration, self._cast_duration + 0.2)
         self._pather.traverse_nodes_fixed("eldritch_end", self)
@@ -72,24 +72,14 @@ class HydraSorc(Sorceress):
         if shenk_pos_abs is None:
             shenk_pos_abs = convert_screen_to_abs(Config().path["shenk_end"][0])
         cast_pos_abs = [shenk_pos_abs[0] * 0.9, shenk_pos_abs[1] * 0.9]
+        self._hydra(cast_pos_abs, spray=0)
         for _ in range(int(Config().char["atk_len_shenk"] * 0.5)):
-            self._hydra(cast_pos_abs, spray=0)
             self._alt_attack(cast_pos_abs, spray=90)
-        pos_m = convert_abs_to_monitor((150, 50))
+        pos_m = convert_abs_to_monitor((300, 100))
         self.pre_move()
         self.move(pos_m, force_move=True)
-        shenk_pos_abs = convert_screen_to_abs(Config().path["shenk_end"][0])
         cast_pos_abs = [shenk_pos_abs[0] * 0.9, shenk_pos_abs[1] * 0.9]
         for _ in range(int(Config().char["atk_len_shenk"] * 0.5)):
-            self._hydra(cast_pos_abs, spray=0)
-            self._alt_attack(cast_pos_abs, spray=90)
-        pos_m = convert_abs_to_monitor((150, 50))
-        self.pre_move()
-        self.move(pos_m, force_move=True)
-        shenk_pos_abs = convert_screen_to_abs(Config().path["shenk_end"][0])
-        cast_pos_abs = [shenk_pos_abs[0] * 0.9, shenk_pos_abs[1] * 0.9]
-        for _ in range(int(Config().char["atk_len_shenk"])):
-            self._hydra(cast_pos_abs, spray=0)
             self._alt_attack(cast_pos_abs, spray=90)
         self.pre_move()
         self.move(pos_m, force_move=True)
