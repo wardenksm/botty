@@ -15,6 +15,8 @@ class Sorceress(IChar):
     def __init__(self, skill_hotkeys: dict, pather: Pather):
         super().__init__(skill_hotkeys)
         self._pather = pather
+        self._center_pos = convert_abs_to_monitor((0, 0))
+        self._mob_detect = Config().char['cs_mob_detect']
 
     def pick_up_item(self, pos: tuple[float, float], item_name: str = None, prev_cast_start: float = 0):
         if math.dist(pos, self._center_pos) > 150 and self._skill_hotkeys["telekinesis"] and\
