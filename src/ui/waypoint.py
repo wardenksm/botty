@@ -72,10 +72,12 @@ def use_wp(label: str = None, act: int = None, idx: int = None, curr_active_act:
         wait(0.2, 0.3)
     pos_wp_btn = (Config().ui_pos["wp_first_btn_x"], Config().ui_pos["wp_first_btn_y"] + Config().ui_pos["wp_btn_height"] * idx)
     x, y = convert_screen_to_monitor(pos_wp_btn)
-    mouse.move(x, y, randomize=[60, 9], delay_factor=[0.9, 1.4])
+    mouse.move(x, y, randomize=[60, 9], delay_factor=[0.9, 1.4], is_async=True)
     if not detect_screen_object(ScreenObjects.WaypointTabs).valid:
         Logger.error("Could not find waypoint tabs")
+        mouse.stop()
         return False
+    mouse.sync()
     mouse.click(button="left")
     # wait till loading screen is over
     if loading.wait_for_loading_screen(5):
