@@ -253,14 +253,14 @@ def open_npc_menu_map(npc_key: Npc, area: str = None, toggle_map: bool = True) -
         elif 'right' in area:
             npc_roi[0] += 40
             npc_roi[2] -= 30
-    while (time.time() - start) < 10:
+    while (curr_time := time.time()) - start < 10:
         img = grab(force_new=True)
         map_center = find_cross_on_map(img, "npc", npc_roi, True)
         if map_center is not None:
             npc_center = convert_map_to_screen(map_center)
-            mouse.move(*convert_screen_to_monitor((npc_center[0], npc_center[1] - 30)), delay_factor=(0.1, 0.15))
+            mouse.move(*convert_screen_to_monitor((npc_center[0], npc_center[1] - 30)), delay_factor=(0.4, 0.5), is_async=True)
         else:
-            center_mouse()
+            center_mouse(is_async=True)
         img = escape_dialogue(grab())
         _, filtered_inp_w = color_filter(img, Config().colors["white"])
         _, filtered_inp_g = color_filter(img, Config().colors["gold"])
@@ -268,16 +268,20 @@ def open_npc_menu_map(npc_key: Npc, area: str = None, toggle_map: bool = True) -
         res_g = template_finder.search(npcs[npc_key]["name_tag_gold"], filtered_inp_g, 0.9, roi=roi).valid
         if res_w:
             mouse.click(button="left")
-            wait(0.7, 0.8)
-            _, filtered_inp = color_filter(grab(), Config().colors["gold"])
-            res = template_finder.search(npcs[npc_key]["name_tag_gold"], filtered_inp, 0.9, roi=roi).valid
-            if res:
-                found_npc_menu = True
-                break
+            mouse.stop()
+            while time.time() - curr_time < 1.0:
+                _, filtered_inp = color_filter(grab(), Config().colors["gold"])
+                res = template_finder.search(npcs[npc_key]["name_tag_gold"], filtered_inp, 0.9, roi=roi).valid
+                if res:
+                    found_npc_menu = True
+                    break
+                wait(0.1, 0.12)
         elif res_g:
+            mouse.stop()
             found_npc_menu = True
+        if found_npc_menu:
             break
-        wait(0.3, 0.4)
+        time.sleep(0.04)
     if not found_npc_menu:
         cv2.imwrite(f"./info_screenshots/automap_npc_failure_{time.strftime('%m%d_%H%M%S')}.png", grab())
     keyboard.send(Config().char["clear_screen"])
