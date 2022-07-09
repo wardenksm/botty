@@ -230,13 +230,14 @@ class IChar:
         wait(0.25, 0.3)
         return prev_cast_start
 
+    @staticmethod
     def select_by_template(
-        self,
         template_type:  str | list[str],
         success_func: Callable = None,
         timeout: float = 8,
         threshold: float = 0.68,
-        telekinesis: bool = False
+        telekinesis: bool = False,
+        dynamic: bool = False
     ) -> bool:
         """
         Finds any template from the template finder and interacts with it
@@ -250,14 +251,21 @@ class IChar:
             # sometimes waypoint is opened and stash not found because of that, check for that
             if is_visible(ScreenObjects.WaypointLabel):
                 keyboard.send("esc")
+        prev_center = (0,0)
         start = time.time()
         while timeout is None or (time.time() - start) < timeout:
             template_match = template_finder.search(template_type, grab(), threshold=threshold)
             if template_match.valid:
-                Logger.debug(f"Select {template_match.name} ({template_match.score*100:.1f}% confidence)")
-                mouse.move(*template_match.center_monitor)
-                wait(0.2, 0.3)
-                mouse.click(button="left")
+                min_dist = min(*template_match.region[2:]) * 0.25
+                mouse.move(*template_match.center_monitor, is_async=True)
+                if dynamic and math.dist(prev_center,template_match.center) > min_dist:
+                    prev_center = template_match.center
+                    time.sleep(0.1)
+                    continue
+                else:
+                    Logger.debug(f"Select {template_match.name} ({template_match.score*100:.1f}% confidence)")
+                    mouse.sync()
+                    mouse.click(button="left")
                 # check the successfunction for 2 sec, if not found, try again
                 check_success_start = time.time()
                 while time.time() - check_success_start < 2:

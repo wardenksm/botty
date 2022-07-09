@@ -326,12 +326,12 @@ def list_visible_objects(img: np.ndarray = None) -> list:
             visible.append(pair[0])
     return visible
 
-def center_mouse(delay_factor: list = None):
+def center_mouse(delay_factor: list = None, is_async: bool = False):
     center_m = convert_abs_to_monitor((0, 0))
     if delay_factor:
-        mouse.move(*center_m, randomize=20, delay_factor = delay_factor)
+        mouse.move(*center_m, randomize=20, delay_factor = delay_factor, is_async=is_async)
     else:
-        mouse.move(*center_m, randomize=20, delay_factor = [0.1, 0.2])
+        mouse.move(*center_m, randomize=20, is_async=is_async)
 
 @cache
 def get_hud_mask() -> np.ndarray:
