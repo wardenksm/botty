@@ -325,9 +325,8 @@ class IChar:
         ):
             self._set_active_skill("right", "teleport")
             mouse.move(pos_monitor[0], pos_monitor[1], randomize=3, delay_factor=[factor*0.1, factor*0.14])
-            wait(0.012, 0.02)
             mouse.click(button="right")
-            wait(self._cast_duration, self._cast_duration + 0.02)
+            time.sleep(self._cast_duration+0.01)
         else:
             # in case we want to walk we actually want to move a bit before the point cause d2r will always "overwalk"
             pos_screen = convert_monitor_to_screen(pos_monitor)
@@ -339,7 +338,6 @@ class IChar:
             pos_abs = [int(pos_abs[0] * adjust_factor), int(pos_abs[1] * adjust_factor)]
             x, y = convert_abs_to_monitor(pos_abs)
             mouse.move(x, y, randomize=5, delay_factor=[factor*0.1, factor*0.14])
-            wait(0.012, 0.02)
             if force_move:
                 keyboard.send(Config().char["force_move"])
             else:

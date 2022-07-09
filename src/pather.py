@@ -6,8 +6,7 @@ import random
 import cv2
 import numpy as np
 from utils.custom_mouse import mouse
-from utils.misc import wait # for stash/shrine tele cancel detection in traverse node
-from utils.misc import is_in_roi
+from utils.misc import is_in_roi, cut_roi
 from config import Config
 from logger import Logger
 from screen import convert_screen_to_monitor, convert_abs_to_screen, convert_abs_to_monitor, convert_screen_to_abs, grab, stop_detecting_window
@@ -584,6 +583,7 @@ class Pather:
             error_msg = "Teleport is required for static pathing"
             Logger.error(error_msg)
             raise ValueError(error_msg)
+        factor = Config().advanced_options["pathing_delay_factor"]
         char.pre_move()
         if type(key) == str:
             path = Config().path[key]
@@ -591,27 +591,44 @@ class Pather:
             path = key
         i = 0
         stuck_count = 0
+        t0 = None
+        prev_time = 0
         while i < len(path):
             x_m, y_m = convert_screen_to_monitor(path[i])
-            x_m += int(random.random() * 6 - 3)
-            y_m += int(random.random() * 6 - 3)
-            t0 = grab(force_new=True)
-            char.move((x_m, y_m))
-            t1 = grab(force_new=True)
-            # check difference between the two frames to determine if tele was good or not
-            diff = cv2.absdiff(t0, t1)
-            diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
-            _, mask = cv2.threshold(diff, 13, 255, cv2.THRESH_BINARY)
-            score = (float(np.sum(mask)) / mask.size) * (1/255.0)
-            if score > 0.15:
+            mouse.move(x_m, y_m, randomize=3, delay_factor=[factor*0.1, factor*0.14], is_async=True)
+            if t0 is None:
                 i += 1
             else:
-                stuck_count += 1
-                Logger.debug(f"Teleport cancel detected. Try same teleport action again. ({score:.4f})")
-                if stuck_count >= 5:
-                    return False
-        # if type(key) == str and ("_save_dist" in key or "_end" in key):
-        #     cv2.imwrite(f"./info_screenshots/nil_path_{key}_" + time.strftime("%Y%m%d_%H%M%S") + ".png", grab())
+                time.sleep(char._cast_duration - 0.08)
+                while True:
+                    curr_time = time.perf_counter()
+                    t1 = cut_roi(grab(force_new=True), Config().ui_roi["cut_skill_bar"])
+                    # check difference between the two frames to determine if tele was good or not
+                    diff = cv2.absdiff(t0, t1)
+                    diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+                    _, mask = cv2.threshold(diff, 13, 255, cv2.THRESH_BINARY)
+                    score = (float(np.sum(mask)) / mask.size) * (1/255.0)
+                    if score > 0.15:
+                        i += 1
+                        Logger.info(f"Teleport finished in {int(1000 * (curr_time - prev_time))}ms")
+                        break
+                    if curr_time - prev_time > char._cast_duration + 0.1:
+                        stuck_count += 1
+                        if stuck_count >= 5:
+                            return False
+                        x_m, y_m = convert_screen_to_monitor(path[i-1])
+                        mouse.move(x_m, y_m, delay_factor=[factor*0.1, factor*0.14])
+                        Logger.debug(f"Teleport cancel detected. Try same teleport action again. ({score:.4f})")
+                        break
+            mouse.sync()
+            mouse.press(button="right")
+            curr_time = time.perf_counter()
+            if (delta := curr_time - prev_time) < char._cast_duration:
+                time.sleep(char._cast_duration - delta)
+            prev_time = curr_time
+            t0 = cut_roi(grab(), Config().ui_roi["cut_skill_bar"])
+            mouse.release(button="right")
+        time.sleep(char._cast_duration)
         return True
 
     def _adjust_abs_range_to_screen(self, abs_pos: tuple[float, float]) -> tuple[float, float]:
