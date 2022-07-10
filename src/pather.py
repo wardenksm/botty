@@ -6,8 +6,7 @@ import random
 import cv2
 import numpy as np
 from utils.custom_mouse import mouse
-from utils.misc import wait # for stash/shrine tele cancel detection in traverse node
-from utils.misc import is_in_roi
+from utils.misc import is_in_roi, cut_roi, wait
 from config import Config
 from logger import Logger
 from screen import convert_screen_to_monitor, convert_abs_to_screen, convert_abs_to_monitor, convert_screen_to_abs, grab, stop_detecting_window
@@ -766,11 +765,6 @@ class Pather:
         elif do_pre_move:
             # we either want to tele charge but have no charges or don't wanna use the charge falling back to default pre_move handling
             char.pre_move()
-
-        if Config().char["type"] == "fohdin": # Walking FOHdin will want to have conviction on so that in case he force moves on mobs, he also kills them.
-            if char.capabilities.can_teleport_with_charges:
-                keyboard.send(Config().fohdin["conviction"])
-                wait(0.15)
 
         last_direction = None
         for i, node_idx in enumerate(path):
