@@ -1,7 +1,8 @@
+from automap_finder import toggle_automap
 from char import IChar
 from town.i_act import IAct
 from screen import grab
-from npc_manager import Npc, open_npc_menu, press_npc_btn
+from npc_manager import Npc, open_npc_menu, open_npc_menu_map, press_npc_btn
 from pather import Pather, Location
 import template_finder
 from utils.misc import wait
@@ -23,9 +24,10 @@ class A4(IAct):
     def can_trade_and_repair(self) -> bool: return True
 
     def resurrect(self, curr_loc: Location) -> Location | bool:
-        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_TYRAEL_STASH), self._char, force_move=True):
-            return False
-        if open_npc_menu(Npc.TYRAEL):
+        toggle_automap(True)
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_TYRAEL_STASH), self._char, force_move=True, toggle_map=False):
+            toggle_automap(False)
+        elif open_npc_menu_map(Npc.TYRAEL, "topright") or open_npc_menu(Npc.TYRAEL, 10):
             press_npc_btn(Npc.TYRAEL, "resurrect")
             return Location.A4_TYRAEL_STASH
         return False
@@ -44,22 +46,28 @@ class A4(IAct):
         return False
 
     def identify(self, curr_loc: Location) -> Location | bool:
-        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_TYRAEL_STASH), self._char, force_move=True): return False
-        if open_npc_menu(Npc.CAIN):
+        toggle_automap(True)
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_TYRAEL_STASH), self._char, force_move=True, toggle_map=False):
+            toggle_automap(False)
+        elif open_npc_menu_map(Npc.CAIN, "bottom") or open_npc_menu(Npc.CAIN, 10):
             press_npc_btn(Npc.CAIN, "identify")
             return Location.A4_TYRAEL_STASH
         return False
 
     def gamble(self, curr_loc: Location) -> Location | bool:
-        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_JAMELLA), self._char, force_move=True): return False
-        if open_npc_menu(Npc.JAMELLA):
+        toggle_automap(True)
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_JAMELLA), self._char, force_move=True, toggle_map=False):
+            toggle_automap(False)
+        elif open_npc_menu_map(Npc.JAMELLA, "left") or open_npc_menu(Npc.JAMELLA, 10):
             press_npc_btn(Npc.JAMELLA, "gamble")
             return Location.A4_JAMELLA
         return False
 
     def open_trade_menu(self, curr_loc: Location) -> Location | bool:
-        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_JAMELLA), self._char, force_move=True): return False
-        if open_npc_menu(Npc.JAMELLA):
+        toggle_automap(True)
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_JAMELLA), self._char, force_move=True, toggle_map=False):
+            toggle_automap(False)
+        elif open_npc_menu_map(Npc.JAMELLA, "left") or open_npc_menu(Npc.JAMELLA, 10):
             press_npc_btn(Npc.JAMELLA, "trade")
             return Location.A4_JAMELLA
         return False
@@ -78,14 +86,18 @@ class A4(IAct):
         return Location.A4_TYRAEL_STASH
 
     def heal(self, curr_loc: Location) -> Location | bool:
-        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_JAMELLA), self._char, force_move=True): return False
-        if open_npc_menu(Npc.JAMELLA):
-            return Location.A4_JAMELLA
-        return False
+        toggle_automap(True)
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_JAMELLA), self._char, force_move=True, toggle_map=False):
+            toggle_automap(False)
+            return False
+        open_npc_menu_map(Npc.JAMELLA, "left")
+        return Location.A4_JAMELLA
 
     def open_trade_and_repair_menu(self, curr_loc: Location) -> Location | bool:
-        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_HALBU), self._char, force_move=True): return False
-        if open_npc_menu(Npc.HALBU):
+        toggle_automap(True)
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A4_HALBU), self._char, force_move=True, toggle_map=False):
+            toggle_automap(False)
+        elif open_npc_menu_map(Npc.HALBU, "right") or open_npc_menu(Npc.HALBU, 10):
             press_npc_btn(Npc.HALBU, "trade_repair")
             return Location.A4_HALBU
         return False

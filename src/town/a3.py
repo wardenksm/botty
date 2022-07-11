@@ -1,7 +1,8 @@
+from cv2 import FarnebackOpticalFlow
 from char import IChar
 from town.i_act import IAct
 from screen import grab
-from npc_manager import Npc, open_npc_menu, press_npc_btn
+from npc_manager import Npc, open_npc_menu, open_npc_menu_map, press_npc_btn
 from pather import Pather, Location
 import template_finder
 from utils.misc import wait
@@ -21,13 +22,18 @@ class A3(IAct):
     def can_stash(self) -> bool: return True
 
     def heal(self, curr_loc: Location) -> Location | bool:
-        if not self._pather.traverse_nodes_automap((curr_loc, Location.A3_ORMUS), self._char, force_move=True): return False
-        open_npc_menu(Npc.ORMUS)
+        toggle_automap(True)
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A3_ORMUS), self._char, force_move=True, toggle_map=False):
+            toggle_automap(False)
+            return False
+        open_npc_menu_map(Npc.ORMUS, toggle_map=False)
         return Location.A3_ORMUS
 
     def open_trade_menu(self, curr_loc: Location) -> Location | bool:
-        if not self._pather.traverse_nodes_automap((curr_loc, Location.A3_ORMUS), self._char, force_move=True): return False
-        if open_npc_menu(Npc.ORMUS):
+        toggle_automap(True)
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A3_ORMUS), self._char, force_move=True, toggle_map=False):
+            toggle_automap(False)
+        elif open_npc_menu_map(Npc.ORMUS, toggle_map=False) or open_npc_menu(Npc.ORMUS, 10):
             press_npc_btn(Npc.ORMUS, "trade")
             return Location.A3_ORMUS
         return False
@@ -58,8 +64,10 @@ class A3(IAct):
         return False
 
     def identify(self, curr_loc: Location) -> Location | bool:
-        if not self._pather.traverse_nodes_automap((curr_loc, Location.A3_STASH_WP), self._char, force_move=True): return False
-        if open_npc_menu(Npc.CAIN):
+        toggle_automap(True)
+        if not self._pather.traverse_nodes_automap((curr_loc, Location.A3_STASH_WP), self._char, force_move=True, toggle_map=False):
+            toggle_automap(False)
+        elif open_npc_menu_map(Npc.CAIN) or open_npc_menu(Npc.CAIN, 10):
             press_npc_btn(Npc.CAIN, "identify")
             return Location.A3_STASH_WP
         return False
