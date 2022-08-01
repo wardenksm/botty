@@ -117,6 +117,11 @@ class ScreenObjects:
         ref="REPAIR_NEEDED",
         roi="repair_needed"
     )
+    LowQuantity=ScreenObject(
+        ref=["ITEM_QUANTITY_0", "ITEM_QUANTITY_LOW"],
+        roi="repair_needed",
+        threshold=0.80
+    )
     ItemPickupText=ScreenObject(
         ref=["ITEM_PICKUP_ENABLED","ITEM_PICKUP_DISABLED"],
         roi="chat_line_1",

@@ -11,6 +11,7 @@ from config import Config
 from logger import Logger
 from npc_manager import Npc, open_npc_menu, press_npc_btn
 import template_finder
+from ui_manager import is_visible, ScreenObjects
 from utils.custom_mouse import mouse
 from utils.misc import wait, load_template
 from inventory import common
@@ -73,13 +74,14 @@ class AnyaShopper(IShopper):
     def check_vendor(self) -> int:
         if not open_npc_menu(Npc.ANYA, 3):
             return 0
+        low_quantity = is_visible(ScreenObjects.LowQuantity)
 
         press_npc_btn(Npc.ANYA, "trade")
         time.sleep(0.1)
         if not common.wait_for_left_inventory():
             return 0
 
-        if self.use_edge:
+        if self.use_edge and not low_quantity:
             keyboard.send(Config().char["weapon_switch"])
         items_bought = 0
         if len(self.armor_list):

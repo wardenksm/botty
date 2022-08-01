@@ -1,3 +1,4 @@
+import keyboard
 from char import IChar
 from config import Config
 from logger import Logger
@@ -5,6 +6,7 @@ from pather import Location, Pather
 from item.pickit import PickIt
 import template_finder
 from town.town_manager import TownManager
+from ui_manager import is_visible, ScreenObjects
 from utils.misc import wait
 from ui import loading
 from shop.anya import AnyaShopper
@@ -51,6 +53,9 @@ class Pindle:
         # Kill Pindle
         if not template_finder.search_and_wait(["PINDLE_0", "PINDLE_1"], threshold=0.65, timeout=20).valid:
             return False
+        # Make sure edge is not used
+        if self._anya and is_visible(ScreenObjects.LowQuantity):
+            keyboard.send(Config().char["weapon_switch"])
         if do_pre_buff:
             self._char.pre_buff()
         # move to pindle
