@@ -30,21 +30,21 @@ monster_info = {
         range = np.array([[86,34,32],[98,63,156]]),
         roi = Config().ui_roi["pindle_fight"],
         name_bar = ["PINDLE_BAR_1", "PINDLE_BAR_2"],
-        hp_width = 62,
+        hp_width = 70,
         color_check = lambda mean: mean[2] > mean[0] * 1.05
     ),
     "eldritch": MonsterInfo(
         range = np.array([[78,24,63],[93,59,199]]),
         roi = Config().ui_roi["eldritch"],
-        name_bar = ["ELDRITCH_BAR_1", "ELDRITCH_BAR_2", "ELDRITCH_BAR_3"],
-        hp_width = 120,
+        name_bar = ["ELDRITCH_BAR_1", "ELDRITCH_BAR_2"],
+        hp_width = 130,
         color_check = None
     ),
     "nihlathak": MonsterInfo(
         range = None,
         roi = None,
-        name_bar = ["NIHL_BAR_1"],
-        hp_width = 0,
+        name_bar = ["NIHL_BAR", "NIHL_BAR_1"],
+        hp_width = 65,
         color_check = None
     )
 }
@@ -71,10 +71,11 @@ class IChar:
         self._name_bar_gone_cnt = 0
         self._immunities = None
         self._immunity_dict = dict({
-            "l": Config().colors["yellow"],
-            "f": Config().colors["red"],
-            "c": Config().colors["blue"],
-            "p": Config().colors["green"]
+            "l": "LIGHTNING_IMMUNE",
+            "f": "FIRE_IMMUNE",
+            "c": "COLD_IMMUNE",
+            "p": "POISON_IMMUNE",
+            "P": "PHYSICAL_IMMUNE"
         })
         self._monster_hp = 1.0
         self._summon_roi = [14,20,116,40]
@@ -133,12 +134,8 @@ class IChar:
 
     def find_immune(self, img) -> str:
         immunity = ''
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         for i in self._immunity_dict:
-            lower = self._immunity_dict[i][0]
-            higher = self._immunity_dict[i][1]
-            mask = cv2.inRange(hsv, lower, higher)
-            if cv2.countNonZero(mask) > 160:
+            if template_finder.search(self._immunity_dict[i], img, threshold=0.95).valid:
                 immunity += i
         return immunity
 
@@ -198,13 +195,14 @@ class IChar:
         monster = monster_info[name]
         x,y,w,h = self._enemy_info_roi
         name_img = img[y:y+h,x:x+w]
-        if template_finder.search(monster.name_bar, name_img, threshold=0.75).valid:
-            if monster.hp_width:
-                hp_img = cv2.addWeighted(img[20:23, 640-monster.hp_width:640+monster.hp_width], 0.5,
-                                         img[23:26, 640-monster.hp_width:640+monster.hp_width], 0.5, 0)
-                self._monster_hp = self.check_monster_hp(hp_img)
-                percent = round(self._monster_hp*100)
-            self._immunities = self.find_immune(name_img[50:350,50:])
+        if template_finder.search(monster.name_bar, name_img, threshold=0.78).valid:
+            hp_img = cv2.addWeighted(img[20:23, 640-monster.hp_width:640+monster.hp_width], 0.5,
+                                     img[23:26, 640-monster.hp_width:640+monster.hp_width], 0.5, 0)
+            self._monster_hp = self.check_monster_hp(hp_img)
+            percent = round(self._monster_hp*100)
+            Logger.info(f"{name} HP: {percent}%")
+            if self._immunities == '':
+                self._immunities = self.find_immune(name_img[50:,50:350])
             self._found_monster_bar = True
             #Logger.info(f"Found name bar! Immunity: {self._immunities}")
             self._monster_gone_cnt = 0
