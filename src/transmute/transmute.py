@@ -1,7 +1,7 @@
 import itertools
 from random import randint
 from config import Config
-from ui_manager import detect_screen_object, select_screen_object_match, wait_until_visible, ScreenObjects
+from ui_manager import detect_screen_object, select_screen_object_match, wait_until_visible, wait_for_update, ScreenObjects
 from .inventory_collection import InventoryCollection
 from .stash import Stash
 from .gem_picking import SimpleGemPicking
@@ -71,7 +71,7 @@ PERFECT_GEMS = [
 class Transmute:
     @staticmethod
     def _wait():
-        wait(0.2, 0.3)
+        wait(0.25, 0.3)
 
     def __init__(self, game_stats: GameStats) -> None:
         self._game_stats = game_stats
@@ -80,19 +80,24 @@ class Transmute:
     def pick_from_area(self, column, row, roi):
         slot_w = Config().ui_pos["slot_width"]
         slot_h = Config().ui_pos["slot_height"]
+        x, y, _, _ = roi
+        grid_roi = [x + column*slot_w, y + row*slot_h, slot_w, slot_h]
         offset_y = (row+0.5)*slot_h
         offset_x = (column+0.5)*slot_w
-        x, y, _, _ = roi
-        x, y = convert_screen_to_monitor(
-            (x + offset_x, y + offset_y))
-        mouse.move(x, y)
-        self._wait()
-        keyboard.send('ctrl', do_release=False)
-        self._wait()
-        mouse.click("left")
-        self._wait()
-        keyboard.release('ctrl')
-        self._wait()
+        x, y = convert_screen_to_monitor((x + offset_x, y + offset_y))
+        for _ in range(3):
+            keyboard.send('ctrl', do_release=False)
+            mouse.move(x, y)
+            self._wait()
+            pre_hover_img = grab()
+            mouse.click("left")
+            self._wait()
+            keyboard.release('ctrl')
+            if wait_for_update(pre_hover_img, grid_roi, timeout=1):
+                return
+            x -= 1
+            y -= 1
+        Logger.error(f"Failed to pick gem at grid ({column}, {row})")
 
     def open_cube(self):
         common.select_tab(0)
@@ -199,13 +204,13 @@ class Transmute:
             return False
         return self._game_stats._game_counter - self._last_game >= int(every_x_game)
 
-    def run_transmutes(self, force=False) -> None:
+    def run_transmutes(self, force=False) -> bool:
         if not wait_until_visible(ScreenObjects.GoldBtnStash, timeout = 8).valid:
             Logger.error("Could not find stash menu. Continue...")
-            return
+            return False
         if not force and not self.should_transmute():
             Logger.info(f"Skipping transmutes. Force: {force}, Game#: {self._game_stats._game_counter}")
-            return None
+            return False
         transmute_gems=Config().configs["transmute"]["parser"]["transmute"]
         gemsToTransmute=[]
         gemsToPutBack=[]
@@ -224,7 +229,7 @@ class Transmute:
             if gem == "flawless":
                 gemsToTransmute+=FLAWLESS_GEMS
                 gemsToPutBack+=PERFECT_GEMS
-        self._run_gem_transmutes(gemsToTransmute,gemsToPutBack,gemLoggerName)
+        return self._run_gem_transmutes(gemsToTransmute,gemsToPutBack,gemLoggerName)
 
     def check_cube_empty(self,gemsToTransmute) -> bool:
         self.open_cube()
@@ -235,13 +240,14 @@ class Transmute:
     def inspect_cube(self,gemsToTransmute)-> InventoryCollection:
         return self.inspect_area(4, 3, roi=Config().ui_roi["cube_area_roi"], known_items=gemsToTransmute)
 
-    def _run_gem_transmutes(self, gemsToTransmute,gemsToPutBack, gemLoggerName) -> None:
+    def _run_gem_transmutes(self, gemsToTransmute,gemsToPutBack, gemLoggerName) -> bool:
         Logger.info(f"Starting {gemLoggerName}gem transmute")
         self._last_game = self._game_stats._game_counter
         s = self.inspect_stash(gemsToTransmute)
         algorithm = SimpleGemPicking(s)
         inv = self.inspect_inventory_area(gemsToTransmute)
         is_cube_empty = None
+        transmute_cnt = 0
         while True:
             while inv.count_empty() >= 3:
                 next_batch = algorithm.next_batch()
@@ -263,6 +269,7 @@ class Transmute:
                             next = inv.pop(gem)
                             self.pick_from_inventory_at(*next)
                         self.transmute()
+                        transmute_cnt += 1
                         self.pick_from_cube_at(2, 3)
                 self.close_cube()
                 self.put_back_all_gems(s,gemsToTransmute,gemsToPutBack)
@@ -270,3 +277,4 @@ class Transmute:
                 self.put_back_all_gems(s,gemsToTransmute,gemsToPutBack)
                 break
         Logger.info(f"Finished {gemLoggerName}gem transmute")
+        return transmute_cnt > 0
