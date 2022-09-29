@@ -108,16 +108,16 @@ def crop_item_tooltip(image: np.ndarray, model: str = "hover-eng_inconsolata_inv
             continue
 
         contains_white = np.max(cropped_item) > 250
-        contains_orange = False
         if not contains_white:
             # check for orange (like key of destruction, etc.)
             orange_mask, _ = color_filter(cropped_item, Config().colors["orange"])
             contains_orange = np.min(orange_mask) > 0
-        if not (contains_white or contains_orange):
-            continue
+            if not contains_orange:
+                continue
 
-        # check to see if contour overlaps right inventory
-        overlaps_inventory = not (x+w < inv_roi[0] or inv_roi[0]+inv_roi[2] < x or y+h+60 < inv_roi[1] or inv_roi[1]+inv_roi[3] < y)
+        # check to see if contour overlaps inventory
+        max_tooltip_height = 80 # 3 lines
+        overlaps_inventory = not (x+w < inv_roi[0] or inv_roi[0]+inv_roi[2] < x or y+h+max_tooltip_height < inv_roi[1] or inv_roi[1]+inv_roi[3] < y)
 
         if not overlaps_inventory:
             continue
